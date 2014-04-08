@@ -223,6 +223,16 @@ class MovementBehavior(Configuration):
         """
         self.components = components if components else {}
 
+    def configure(self, conf={}):
+        """
+        Special behavior to configure VelocityComponents
+        """
+        if 'components' in conf:
+            components = conf.pop('components')
+            for name, kwargs in components.items():
+                self.components[name] = VelocityComponent(**kwargs)
+        return super(MovementBehavior, self).configure(conf)
+
 ##########################################################################
 ## Simulation Paramter Defaults
 ##########################################################################

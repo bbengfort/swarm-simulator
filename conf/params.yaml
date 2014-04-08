@@ -1,1 +1,103 @@
-debug: false
+## Parameter Configuration File ##
+
+# This is an example of a parameter file with the default behaviors.
+# Fill in the blanks as needed or write this file in the evolutionary process.
+
+## System configuration
+
+debug: false            # Are we in DEBUG mode?
+maximum_velocity: 100   # What is the maximum velocity of any node?
+
+## Movement Behaviors
+## Each movement behavior is defined seperately
+
+## Spreading Movement
+spreading:
+    components:
+        avoidance:
+            priority: 1
+            weight: 0.66
+            radius: 100
+            alpha: 180
+        separation:
+            priority: 2
+            weight: 0.83
+            radius: 150
+            alpha: 180
+        clearance:
+            priority: 3
+            weight: 0.83
+            radius: 150
+            alpha: 115
+        alignment:
+            priority: 4
+            weight: 0.83
+            radius: 250
+            alpha: 115
+        cohesion:
+            priority: 5
+            weight: 0.83
+            radius: 300
+            alpha: 360
+
+## Seeking Movement
+seeking:
+    components:
+        avoidance:
+            priority: 1
+            weight: 0.83
+            radius: 100
+            alpha: 180
+        seek:
+            priority: 2
+            weight: 0.66
+            radius: 250
+            alpha: 360
+        separation:
+            priority: 3
+            weight: 0.25
+            radius: 50
+            alpha: 90
+
+## Caravan Movement
+caravan:
+    components:
+        avoidance:
+            priority: 1
+            weight: 0.83
+            radius: 100
+            alpha: 180
+        homing:
+            priority: 2
+            weight: 0.83
+            radius: nil
+            alpha: nil
+        separation:
+            priority: 3
+            weight: 0.83
+            radius: 100
+            alpha: 180
+        clearance:
+            priority: 4
+            weight: 0.83
+            radius: 150
+            alpha: 60
+
+## Guarding Movement
+guarding:
+    components:
+        avoidance:
+            priority: 1
+            weight: 1.0
+            radius: 100
+            alpha: 180
+        separation:
+            priority: 2
+            weight: 0.62
+            radius: 50
+            alpha: 180
+        mineral_cohesion:
+            priority: 3
+            weight: 0.62
+            radius: 150
+            alpha: 360
