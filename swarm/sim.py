@@ -69,7 +69,8 @@ class Agent(pygame.sprite.Sprite):
         self.image = rotate(self.image, self.position.angle_to(self.velocity))
 
     def update(self):
-        self.set_position(self.position + self.velocity)
+        #self.set_position(self.position + self.velocity)
+        pass
 
 class Simulation(object):
     """

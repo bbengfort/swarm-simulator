@@ -7,6 +7,11 @@
 
 debug: false            # Are we in DEBUG mode?
 maximum_velocity: 100   # What is the maximum velocity of any node?
+team_size: 50           # How many agents in each team?
+deposits: 12            # How many resource deposits?
+stash_size: 80          # Resources per deposit
+maximum_time: 40000     # End of time?
+world_size: 3000        # Size of the square world
 
 ## Movement Behaviors
 ## Each movement behavior is defined seperately

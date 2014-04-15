@@ -243,7 +243,12 @@ class SimulationParameters(Configuration):
     """
 
     debug            = True
-    maximum_velocity = 100
+    maximum_velocity = 12
+    team_size        = 50
+    deposits         = 12
+    stash_size       = 80
+    maximum_time     = 40000
+    world_size       = 3000
 
     # Spreading Movement Behavior
     spreading        = MovementBehavior({
