@@ -17,4 +17,4 @@ The library for the Swarm Simulator
 ## Imports
 ##########################################################################
 
-from sim import Simulation
+from viz import visualize
