@@ -18,7 +18,7 @@ def visualize(world, dimensions, fps):
     running = True
 
     while running:
-        wait_time -= clock.tick(100)
+        wait_time -= clock.tick(1)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -32,7 +32,11 @@ def visualize(world, dimensions, fps):
     pygame.quit()
 
 def update(world):
-    pass
+    """
+    Change to world.update so world can pass in neighbors.
+    """
+    for agent in world.agents:
+        agent.update()
 
 def draw(screen, world, baked):
     screen.fill(0xffffff)
