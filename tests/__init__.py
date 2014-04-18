@@ -39,3 +39,12 @@ class InitializationTest(unittest.TestCase):
             import swarm
         except ImportError:
             self.fail("Could not import swarm module")
+
+    def test_sarsim_import(self):
+        """
+        Assert we can import the sarsim module
+        """
+        try:
+            import sarsim
+        except ImportError:
+            self.fail("Could not import sarsim module")

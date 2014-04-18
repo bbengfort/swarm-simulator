@@ -37,3 +37,11 @@ class SimulatedWorld(object):
         self.deposits = setting('deposits')
 
         self.agents = []
+
+    def add_agent(self, agent):
+        agent.world = self
+        self.agents.append(agent)
+
+    def add_agents(self, agents):
+        for agent in agents:
+            self.add_agent(agent)
