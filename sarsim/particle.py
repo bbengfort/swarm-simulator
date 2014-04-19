@@ -132,8 +132,8 @@ class Particle(object):
         for agent in self.world.agents:
             if agent is self: continue       # We're not in our own neighborhood
 
-            #distance = np.linalg.norm(self.pos-agent.pos)
-            #if distance > radius: continue   # Outside of our own vision radius
+            distance = np.linalg.norm(self.pos-agent.pos)
+            if distance > radius: continue   # Outside of our own vision radius
 
                                              # Outside the angle of vision
 
@@ -162,7 +162,10 @@ class Particle(object):
         """
         r = self.components['cohesion'].radius
         a = self.components['cohesion'].alpha
-        neighbors = self.neighbors(r,a)
+        neighbors = list(self.neighbors(r,a))
+
+        if not neighbors:
+            return np.zeros(2)
 
         center = np.average(list(n.pos for n in neighbors), axis=0)
         delta  = center - self.pos
@@ -179,13 +182,17 @@ class Particle(object):
         a = self.components['alignment'].alpha
         neighbors = list(self.neighbors(r,a))
 
+        if not neighbors:
+            return np.zeros(2)
+
         center = np.average(list(n.pos for n in neighbors), axis=0)
         deltap = center - self.pos
         scale  = (np.linalg.norm(deltap) / r) ** 2
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
         deltav = avgvel - self.vel
-        vmaxrt = VMAX * (deltav / np.linalg.norm(deltav))
+        deltal = np.linalg.norm(deltav)
+        vmaxrt = VMAX * (deltav / deltal) if deltal > 0 else np.zeros(2)
 
         return vmaxrt * scale
 
@@ -200,6 +207,9 @@ class Particle(object):
         a = self.components['avoidance'].alpha
         target = self.find_nearest(r, a, 'enemy')
 
+        if not target:
+            return np.zeros(2)
+
         delta  = target.pos - self.pos
         scale  = (r / np.linalg.norm(delta)) ** 2
         vmaxrt = VMAX * (delta / np.linalg.norm(delta))
@@ -212,7 +222,10 @@ class Particle(object):
         """
         r = self.components['separation'].radius
         a = self.components['separation'].alpha
-        neighbors = self.neighbors(r,a)
+        neighbors = list(self.neighbors(r,a))
+
+        if not neighbors:
+            return np.zeros(2)
 
         center = np.average(list(n.pos for n in neighbors), axis=0)
         delta  = center - self.pos
@@ -254,7 +267,7 @@ if __name__ == '__main__':
     import swarm
     from world import SimulatedWorld
 
-
+    # Need to deal with empty neighborhoods...
     neighbors = np.array([
         Particle(np.array([200,100]), np.array([30,10]), 'a'),
         Particle(np.array([300,300]), np.array([30,60]), 'b'),
@@ -267,4 +280,4 @@ if __name__ == '__main__':
     world = SimulatedWorld()
     world.add_agent(particle)
     world.add_agents(neighbors)
-    swarm.visualize(world, [700,700], 30)
+    swarm.visualize(world, [700,700], 8)

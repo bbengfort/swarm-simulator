@@ -10,7 +10,7 @@ def visualize(world, dimensions, fps):
     screen = pygame.display.set_mode(dimensions, 0, 32)
     clock = pygame.time.Clock()
     arrow = pygame.image.load("assets/arrow.bmp").convert()
-    arrow.set_colorkey(0xffffff)
+    arrow.set_colorkey(0xffffffff)
     arrow_baked = bake_rotations(arrow, math.pi / 2, 32)
     draw(screen, world, arrow_baked)
     frame_time = 1000.0 / fps
@@ -18,7 +18,7 @@ def visualize(world, dimensions, fps):
     running = True
 
     while running:
-        wait_time -= clock.tick(1)
+        wait_time -= clock.tick(100)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -39,7 +39,7 @@ def update(world):
         agent.update()
 
 def draw(screen, world, baked):
-    screen.fill(0xffffff)
+    screen.fill(0xffffffff)
 
     for agent in world.agents:
         angle = math.atan2(agent.vel[1], agent.vel[0])
