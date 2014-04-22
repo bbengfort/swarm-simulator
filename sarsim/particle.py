@@ -20,6 +20,7 @@ A Particle class for local behaviors
 import numpy as np
 from params import parameters
 from exceptions import *
+from vectors import Vector
 
 ##########################################################################
 ## Module Constants
@@ -47,11 +48,12 @@ class Particle(object):
         to identify the particle) and the world it belongs to, so that it
         can be bound to discover its own neighborhood.
         """
-        self.pos   = position
-        self.vel   = velocity
+        self.pos   = Vector.arr(position)           # Init vectors here?
+        self.vel   = Vector.arr(velocity)           # Init vectors here?
         self.idx   = identifier
         self.world = kwargs.get('world', None)      # Initialize in world
         self.state = kwargs.get('state', SPREADING) # Set initial state...
+        self.team  = kwargs.get('team', 'ally')     # Set the team
 
     def __repr__(self):
         type_name  = self.__class__.__name__
@@ -86,12 +88,13 @@ class Particle(object):
 
         # Sort the vectors by priority
         vectors = sorted(vectors, key=lambda vp: vp[1].priority)
+        print [(vec * param.weight).length for vec,param in vectors]
 
-        newvel  = np.zeros(2)
+        newvel  = Vector.zero()
         for vec, params in vectors:
             wvec = newvel + (params.weight * vec)
-            if np.linalg.norm(wvec) > VMAX:
-                break
+            if wvec.length > VMAX:
+                continue
             newvel += wvec
 
         self.vel = newvel
@@ -130,14 +133,16 @@ class Particle(object):
             raise Exception("Can only find neighbors for bound particles.")
 
         for agent in self.world.agents:
-            if agent is self: continue       # We're not in our own neighborhood
+            if agent is self: continue        # We're not in our own neighborhood
 
             distance = np.linalg.norm(self.pos-agent.pos)
-            if distance > radius: continue   # Outside of our own vision radius
+            if distance > radius: continue    # Outside of our own vision radius
 
-                                             # Outside the angle of vision
+            # This needs to be better...
+            angle = self.vel.angle(agent.pos)
+            if angle > alpha: continue        # Outside the angle of vision
 
-            yield agent                      # The agent is a neighbor!
+            yield agent                       # The agent is a neighbor!
 
     def find_nearest(self, radius, alpha, team="any"):
         """
@@ -146,6 +151,10 @@ class Particle(object):
         nearest  = None
         distance = None
         for neighbor in self.neighbors(radius, alpha):
+
+            if team != 'any' and neighbor.team != team:
+                continue
+
             d = np.linalg.norm(self.pos - neighbor.pos)
             if distance is None or d < distance:
                 distance = d
@@ -165,13 +174,13 @@ class Particle(object):
         neighbors = list(self.neighbors(r,a))
 
         if not neighbors:
-            return np.zeros(2)
+            return Vector.zero()
 
         center = np.average(list(n.pos for n in neighbors), axis=0)
         delta  = center - self.pos
 
-        scale  = (np.linalg.norm(delta) / r) ** 2
-        vmaxrt = VMAX * (delta / np.linalg.norm(delta))
+        scale  = (delta.length / r) ** 2
+        vmaxrt = VMAX * (delta / delta.length)
         return vmaxrt * scale
 
     def alignment(self):
@@ -183,16 +192,16 @@ class Particle(object):
         neighbors = list(self.neighbors(r,a))
 
         if not neighbors:
-            return np.zeros(2)
+            return Vector.zero()
 
         center = np.average(list(n.pos for n in neighbors), axis=0)
         deltap = center - self.pos
-        scale  = (np.linalg.norm(deltap) / r) ** 2
+        scale  = (deltap.length / r) ** 2
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
         deltav = avgvel - self.vel
-        deltal = np.linalg.norm(deltav)
-        vmaxrt = VMAX * (deltav / deltal) if deltal > 0 else np.zeros(2)
+        deltal = deltav.length
+        vmaxrt = VMAX * (deltav / deltal) if deltal > 0 else Vector.zero()
 
         return vmaxrt * scale
 
@@ -208,11 +217,11 @@ class Particle(object):
         target = self.find_nearest(r, a, 'enemy')
 
         if not target:
-            return np.zeros(2)
+            return Vector.zero()
 
         delta  = target.pos - self.pos
-        scale  = (r / np.linalg.norm(delta)) ** 2
-        vmaxrt = VMAX * (delta / np.linalg.norm(delta))
+        scale  = (r / delta.length) ** 2
+        vmaxrt = VMAX * (delta / delta.length)
 
         return -1 * vmaxrt * scale
 
@@ -225,13 +234,13 @@ class Particle(object):
         neighbors = list(self.neighbors(r,a))
 
         if not neighbors:
-            return np.zeros(2)
+            return Vector.zero()
 
         center = np.average(list(n.pos for n in neighbors), axis=0)
         delta  = center - self.pos
 
-        scale  = (r / np.linalg.norm(delta)) ** 2
-        vmaxrt = VMAX * (delta / np.linalg.norm(delta))
+        scale  = (r / delta.length) ** 2
+        vmaxrt = VMAX * (delta / delta.length)
 
         return -1 * vmaxrt * scale
 
@@ -245,13 +254,18 @@ class Particle(object):
             raise Exception("In Seeking, the particle must have a target")
 
         direction = self.target.pos - self.pos
-        return VMAX * (direction / np.linalg.norm(direction))
+        return VMAX * (direction / direction.length)
 
     def clearance(self):
         """
-        Reports the clearance velocity orthaganol to current velocity
+        Reports the clearance velocity orthoganol to current velocity
         """
-        return VMAX * np.cross(self.vel, np.array([1,0]))
+        r = self.components['clearance'].radius
+        a = self.components['clearance'].alpha
+        neighbors = list(self.neighbors(r,a))
+        if neighbors:
+            return VMAX * self.vel.orthogonal
+        return Vector.zero()
 
     def homing(self):
         """
@@ -261,23 +275,35 @@ class Particle(object):
             raise Exception("In Homing, the particle must have a target")
 
         direction = self.target.pos - self.pos
-        return VMAX * (direction / np.linalg.norm(direction))
+        return VMAX * (direction / direction.length)
 
 if __name__ == '__main__':
-    import swarm
+
+    from params import parameters
     from world import SimulatedWorld
 
-    # Need to deal with empty neighborhoods...
-    neighbors = np.array([
-        Particle(np.array([200,100]), np.array([30,10]), 'a'),
-        Particle(np.array([300,300]), np.array([30,60]), 'b'),
-        Particle(np.array([100,500]), np.array([20,40]), 'c'),
-        Particle(np.array([200,600]), np.array([30,20]), 'd'),
-    ])
-
-    particle = Particle(np.array([100,200]), np.array([200,200]), "me")
-
+    debug = parameters.get('debug', True)
     world = SimulatedWorld()
-    world.add_agent(particle)
-    world.add_agents(neighbors)
-    swarm.visualize(world, [700,700], 8)
+
+    # Add particles to the world
+    for c in 'abcdefghij':
+        agent = Particle(Vector.rand(100, 300), Vector.rand(1,4), c)
+        world.add_agent(agent)
+
+    def update(iterations=1):
+
+        def inner_update():
+            for agent in world.agents:
+                agent.update()
+                print "%s at %s going %s" % (agent.idx, str(agent.pos), str(agent.vel))
+
+        print "Initial state:"
+        for agent in world.agents:
+            print "%s at %s going %s" % (agent.idx, str(agent.pos), str(agent.vel))
+
+        for i in xrange(1, iterations+1):
+            print
+            print "Iteration #%i" % i
+            inner_update()
+
+    update()

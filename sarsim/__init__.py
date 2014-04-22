@@ -18,3 +18,4 @@ An offline (non-visual) search and retrieval simulation
 ##########################################################################
 
 from world import *
+from particle import *

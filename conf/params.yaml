@@ -5,7 +5,7 @@
 
 ## System configuration
 
-debug: false            # Are we in DEBUG mode?
+debug: true             # Are we in DEBUG mode?
 maximum_velocity: 100   # What is the maximum velocity of any node?
 team_size: 50           # How many agents in each team?
 deposits: 12            # How many resource deposits?
