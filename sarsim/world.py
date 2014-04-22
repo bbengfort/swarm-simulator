@@ -45,7 +45,7 @@ class SimulatedWorld(object):
 
         # Initialize the teams
         for idx, coords in enumerate(zip(*circular_distribute(num=setting('team_size'), center=(300,300)))):
-            self.add_agent(Particle(Vector.arrp(coords), Vector.rand(setting('maximum_velocity')/2), 'ally%2i' % (idx+1)))
+            self.add_agent(Particle(Vector.arrp(*coords), Vector.rand(setting('maximum_velocity')/2), 'ally%02i' % (idx+1)))
 
     def add_agent(self, agent):
         agent.world = self
@@ -54,3 +54,9 @@ class SimulatedWorld(object):
     def add_agents(self, agents):
         for agent in agents:
             self.add_agent(agent)
+
+    def update(self):
+        for agent in self.agents:
+            agent.update()
+        for agent in self.agents:
+            agent.blit()

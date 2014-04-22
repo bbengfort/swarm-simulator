@@ -29,9 +29,20 @@ from sarsim.vectors import Vector
 
 if __name__ == '__main__':
 
+    import time
     # Construct the world
     SIZE  = 1000
     world = SimulatedWorld()
 
+#    start = time.time()
+#    for x in xrange(0,40000):
+        # maybe we have to save velocity from previous time step?
+#        for agent in world.agents:
+#            agent.update()
+#    finit = time.time()
+#    delta = finit - start
+
+#    print "Took %0.3f seconds to do 40k iterations" % delta
+
     # Run the visualization
-    visualize(world, [SIZE,SIZE], 8)
+    visualize(world, [SIZE,SIZE], 30)

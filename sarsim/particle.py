@@ -70,34 +70,34 @@ class Particle(object):
         """
         Called to update the particle at a new timestep.
         """
-        self.update_veloicty()
+        self.update_velocity()
         self.update_position()
 
     def update_position(self):
-        self.pos += self.vel
+        self.newpos = self.pos + self.newvel
 
-    def update_veloicty(self):
+    def update_velocity(self):
         vectors = []    # Tuples of vector components and their priority
         for component, parameters in self.components.items():
             # Get the method by name and compute
             if hasattr(self, component):
-                component = getattr(self, component)
-                vectors.append((component(), parameters))
+                velocity = getattr(self, component)
+                vectors.append((component, velocity(), parameters))
             else:
                 raise Exception("No method on %r, '%s'" % (self, component))
 
         # Sort the vectors by priority
-        vectors = sorted(vectors, key=lambda vp: vp[1].priority)
-        print [(vec * param.weight).length for vec,param in vectors]
+        vectors = sorted(vectors, key=lambda vp: vp[2].priority)
+        #print [(comp, (vec * param.weight).length) for comp,vec,param in vectors]
 
         newvel  = Vector.zero()
-        for vec, params in vectors:
+        for comp, vec, params in vectors:
             wvec = newvel + (params.weight * vec)
             if wvec.length > VMAX:
                 continue
-            newvel += wvec
+            newvel = wvec
 
-        self.vel = newvel
+        self.newvel = newvel
 
     ##////////////////////////////////////////////////////////////////////
     ## Helper Functions
@@ -161,6 +161,13 @@ class Particle(object):
                 nearest  = neighbor
         return nearest
 
+    def blit(self):
+        """
+        Swap new pos/vel for old ones.
+        """
+        self.pos = self.newpos
+        self.vel = self.newvel
+
     ##////////////////////////////////////////////////////////////////////
     ## Movement Behavior Velocity Components
     ##////////////////////////////////////////////////////////////////////
@@ -180,7 +187,7 @@ class Particle(object):
         delta  = center - self.pos
 
         scale  = (delta.length / r) ** 2
-        vmaxrt = VMAX * (delta / delta.length)
+        vmaxrt = VMAX * delta.unit
         return vmaxrt * scale
 
     def alignment(self):
@@ -200,8 +207,7 @@ class Particle(object):
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
         deltav = avgvel - self.vel
-        deltal = deltav.length
-        vmaxrt = VMAX * (deltav / deltal) if deltal > 0 else Vector.zero()
+        vmaxrt = VMAX * deltav.unit
 
         return vmaxrt * scale
 
@@ -239,8 +245,8 @@ class Particle(object):
         center = np.average(list(n.pos for n in neighbors), axis=0)
         delta  = center - self.pos
 
-        scale  = (r / delta.length) ** 2
-        vmaxrt = VMAX * (delta / delta.length)
+        scale  = ((r - delta.length) / r) ** 2
+        vmaxrt = VMAX * delta.unit
 
         return -1 * vmaxrt * scale
 
@@ -284,11 +290,6 @@ if __name__ == '__main__':
 
     debug = parameters.get('debug', True)
     world = SimulatedWorld()
-
-    # Add particles to the world
-    for c in 'abcdefghij':
-        agent = Particle(Vector.rand(100, 300), Vector.rand(1,4), c)
-        world.add_agent(agent)
 
     def update(iterations=1):
 

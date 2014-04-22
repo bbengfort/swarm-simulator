@@ -6,7 +6,7 @@
 ## System configuration
 
 debug: true             # Are we in DEBUG mode?
-maximum_velocity: 100   # What is the maximum velocity of any node?
+maximum_velocity: 15    # What is the maximum velocity of any node?
 team_size: 50           # How many agents in each team?
 deposits: 12            # How many resource deposits?
 stash_size: 80          # Resources per deposit

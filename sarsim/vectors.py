@@ -47,7 +47,7 @@ class Vector(np.ndarray):
         return klass.arr(np.zeros(2))
 
     @classmethod
-    def arrp(klass, coords):
+    def arrp(klass, *coords):
         """
         Constructor to initialize from a Python type (tuple or list)
         """

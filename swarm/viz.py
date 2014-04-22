@@ -35,8 +35,7 @@ def update(world):
     """
     Change to world.update so world can pass in neighbors.
     """
-    for agent in world.agents:
-        agent.update()
+    world.update()
 
 def draw(screen, world, baked):
     screen.fill(0xffffffff)
