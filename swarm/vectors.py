@@ -67,6 +67,14 @@ class Vector(np.ndarray):
     ##////////////////////////////////////////////////////////////////////
 
     @property
+    def x(self):
+        return self[0]
+
+    @property
+    def y(self):
+        return self[1]
+
+    @property
     def unit(self):
         """
         Returns the unit vector (length 1) of this vector
@@ -111,11 +119,35 @@ class Vector(np.ndarray):
         if degrees: return np.degrees(angle)
         return angle
 
+    def heading(self, other, vel=None, degrees=True):
+        """
+        Compute the heading from this point to another point.
+        This will return the degrees
+        """
+        delta = other - self
+        angle = np.arctan2(-delta.y, delta.x)
+
+        if vel is not None:
+            angle += vel.angle(Vector.arrp(1,0), False)
+
+        if degrees: return np.degrees(angle)
+        return angle
+
+
     def distance(self, other):
         """
         Compute the Euclidean distance between two vectors
         """
         return np.linalg.norm(self-other)
+
+    def __eq__(self, other):
+        """
+        Are two vectors equal?
+        """
+        return np.allclose(self, other)
+
+    def __ne__(self, other):
+        return not self == other
 
 if __name__ == '__main__':
     v1 = Vector.arr(np.array([2,4]))
