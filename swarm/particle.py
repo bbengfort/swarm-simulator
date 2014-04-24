@@ -99,7 +99,6 @@ class Particle(object):
 
         # Sort the vectors by priority
         vectors = sorted(vectors, key=lambda vp: vp[2].priority)
-        #print [(comp, (vec * param.weight).length) for comp,vec,param in vectors]
 
         newvel  = Vector.arrp(self.vel.x, self.vel.y)
         for comp, vec, params in vectors:
@@ -331,6 +330,41 @@ class Particle(object):
 
         direction = self.target.pos - self.pos
         return VMAX * (direction / direction.length)
+
+##########################################################################
+## Resource Object
+##########################################################################
+
+class ResourceParticle(Particle):
+
+    def __init__(self, pos, **kwargs):
+        # Create the stash that the minerals contain
+        self.stash = kwargs.get('stash_size', parameters.get('stash_size'))
+
+        # Pass everything else back to super
+        kwargs['team'] = kwargs.get('team', 'mineral')  # Add the default team
+        super(ResourceParticle, self).__init__(pos, Vector.arrp(0,1), **kwargs)
+
+    def update(self, *args, **kwargs):
+        # Resources don't update!
+        pass
+
+    def blit(self, *args, **kwargs):
+        # Resources don't blit!
+        pass
+
+    def mine(self):
+        """
+        Decrements the stack by one and returns True if there is anything
+        left, otherwise returns False if this thing is unminable.
+        """
+        if self.stash > 0:
+            self.stash -= 1
+            return True
+        return False
+
+    def __nonzero__(self):
+        return self.stash > 0
 
 if __name__ == '__main__':
 

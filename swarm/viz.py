@@ -12,8 +12,10 @@ def visualize(world, screen_size, fps):
              float(screen_size[1]) / world.size[1])
     clock = pygame.time.Clock()
     arrow = pygame.image.load("assets/arrow.png").convert_alpha()
+    mine  = pygame.image.load("assets/ore.png").convert_alpha()
     arrow_baked = bake_rotations(arrow, 0.05, math.pi / 2, 128)
-    draw(screen, world, arrow_baked, scale)
+    mine_baked  = bake_rotations(mine, 0.5, math.pi / 2, 128)
+    draw(screen, world, arrow_baked, scale, mine_baked)
     frame_time = 1000.0 / fps
     wait_time = frame_time
     running = True
@@ -28,7 +30,7 @@ def visualize(world, screen_size, fps):
         if wait_time <= 0:
             wait_time = frame_time
             update(world)
-            draw(screen, world, arrow_baked, scale)
+            draw(screen, world, arrow_baked, scale, mine_baked)
 
     pygame.quit()
 
@@ -38,12 +40,19 @@ def update(world):
     """
     world.update()
 
-def draw(screen, world, baked, scale):
+def draw(screen, world, baked, scale, mine):
     screen.fill(0xffffffff)
 
     for agent in world.agents:
         angle = math.atan2(agent.vel[1], agent.vel[0])
-        image = rotation(baked, angle)
+
+        # HACK! Kevin- go ahead and fix this!
+        if agent.__class__.__name__ == "ResourceParticle":
+            image = rotation(mine, angle)
+        else:
+            image = rotation(baked, angle)
+        # HACK OVER!
+
         x = agent.pos[0] * scale[0] - image.get_width() / 2
         y = screen.get_height() - (agent.pos[1] * scale[1] + image.get_height() / 2)
         screen.blit(image, (x, y))

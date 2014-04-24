@@ -17,10 +17,10 @@ Contains the mechanics and behavior of the world
 ## Imports
 ##########################################################################
 
+from particle import *
+from vectors import Vector
 from params import parameters
 from circle import circular_distribute
-from particle import Particle
-from vectors import Vector
 
 ##########################################################################
 ## Helper functions
@@ -50,6 +50,27 @@ def initialize_particles(**kwargs):
         name     = team % (idx+1)
         yield klass(position, velocity, name)
 
+def initialize_resources(**kwargs):
+    """
+    Initialize N resources in a circular distribution around a center
+    point, where N=number. Similar to the particle initator, but has
+    mineral specific initialization tasks like no velocity.
+    """
+
+    # Initialize variables needed to do initialization
+    klass  = kwargs.get('type', ResourceParticle)
+    number = kwargs.get('number', parameters.get('deposits'))
+    center = kwargs.get('center', (2000,1500))
+    radius = kwargs.get('radius', 200)
+    team   = kwargs.get('team', 'mineral%02i')
+
+    # Generate coordinates and particles
+    coords = zip(*circular_distribute(num=number, center=center, r=radius))
+    for idx, coord in enumerate(coords):
+        position = Vector.arrp(*coord)
+        name     = team % (idx+1)
+        yield klass(position, identifier=name)
+
 ##########################################################################
 ## The world environment for a simulation
 ##########################################################################
@@ -76,6 +97,9 @@ class World(object):
             self.add_agents(kwargs['agents'])
         else:
             self.add_agents(initialize_particles())
+
+        # Initialize resources
+        self.add_agents(initialize_resources())
 
     def add_agent(self, agent):
         agent.world = self
