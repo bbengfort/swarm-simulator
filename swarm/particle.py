@@ -127,6 +127,8 @@ class Particle(object):
         Is there a better way than running through all the agents and
         checking if they are within our neighborhood, for every single
         velocity component we check?!
+
+        TODO: Store neighborhood until blit
         """
 
         if not self.is_bound():
@@ -206,7 +208,8 @@ class Particle(object):
         scale  = (deltap.length / r) ** 2
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
-        deltav = avgvel - self.vel
+        #deltav = avgvel - self.vel     # Why are we subtracting the average velocity from ours? Makes no sense.
+        deltav = Vector.arr(avgvel)
         vmaxrt = VMAX * deltav.unit
 
         return vmaxrt * scale
@@ -217,6 +220,8 @@ class Particle(object):
 
         Target should be the closest enemy agent. See the following:
         nearest, _ = self.find_nearest(neighbors)
+
+        Changed the formula to (r-dp.length /r)**2
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
@@ -226,7 +231,7 @@ class Particle(object):
             return Vector.zero()
 
         delta  = target.pos - self.pos
-        scale  = (r / delta.length) ** 2
+        scale  = ((r - delta.length) / r) ** 2
         vmaxrt = VMAX * (delta / delta.length)
 
         return -1 * vmaxrt * scale
@@ -234,6 +239,8 @@ class Particle(object):
     def separation(self):
         """
         Reports the separation velocity from an array of neighbors
+
+        Changed the formula to (r-dp.length /r)**2
         """
         r = self.components['separation'].radius
         a = self.components['separation'].alpha

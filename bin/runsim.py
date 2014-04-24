@@ -20,8 +20,8 @@ Run the swarm simulation.
 
 import numpy as np
 from swarm import visualize
-from sarsim import SimulatedWorld, Particle
-from sarsim.vectors import Vector
+from swarm import World, Particle
+from swarm.vectors import Vector
 
 ##########################################################################
 ## Main method
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     import time
     # Construct the world
     SIZE  = 1000
-    world = SimulatedWorld()
+    world = World()
 
 #    start = time.time()
 #    for x in xrange(0,40000):

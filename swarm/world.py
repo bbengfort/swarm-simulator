@@ -23,10 +23,38 @@ from particle import Particle
 from vectors import Vector
 
 ##########################################################################
+## Helper functions
+##########################################################################
+
+def initialize_particles(**kwargs):
+    """
+    Initialize N particles in a circular distribution around a center
+    point, where N=number. Keyword arguments include a radius from the
+    center, an identifier pattern and other keyword arguments that would
+    instantiate a particle.
+    """
+
+    # Initialize variables needed to do initialization
+    klass  = kwargs.get('type', Particle)
+    number = kwargs.get('number', parameters.get('team_size'))
+    center = kwargs.get('center', (300,300))
+    radius = kwargs.get('radius', 100)
+    team   = kwargs.get('team', 'ally%02i')
+    maxvel = kwargs.get('maximum_velocity', parameters.get('maximum_velocity'))
+
+    # Generate coordinates and particles
+    coords = zip(*circular_distribute(num=number, center=center, r=radius))
+    for idx, coord in enumerate(coords):
+        position = Vector.arrp(*coord)
+        velocity = Vector.rand(maxvel) if maxvel > 0 else Vector.zero()
+        name     = team % (idx+1)
+        yield klass(position, velocity, name)
+
+##########################################################################
 ## The world environment for a simulation
 ##########################################################################
 
-class SimulatedWorld(object):
+class World(object):
     """
     Performs the mechanics of simulating the world
     """
@@ -44,8 +72,10 @@ class SimulatedWorld(object):
         self.agents = []
 
         # Initialize the teams
-        for idx, coords in enumerate(zip(*circular_distribute(num=setting('team_size'), center=(300,300)))):
-            self.add_agent(Particle(Vector.arrp(*coords), Vector.rand(setting('maximum_velocity')/2), 'ally%02i' % (idx+1)))
+        if 'agents' in kwargs:
+            self.add_agents(kwargs['agents'])
+        else:
+            self.add_agents(initialize_particles())
 
     def add_agent(self, agent):
         agent.world = self

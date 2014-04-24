@@ -19,6 +19,10 @@ Generate random points in a circle with a given radius and center point.
 
 import numpy as np
 
+##########################################################################
+## Circular helper functions
+##########################################################################
+
 def circular_distribute(num=50, r=100, center=(0,0)):
     """
     Distrubte num points randomly around a center point with a particular
