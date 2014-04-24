@@ -48,16 +48,20 @@ class Particle(object):
         to identify the particle) and the world it belongs to, so that it
         can be bound to discover its own neighborhood.
         """
-        self.pos   = Vector.arr(position)           # Init vectors here?
-        self.vel   = Vector.arr(velocity)           # Init vectors here?
-        self.idx   = identifier
-        self.world = kwargs.get('world', None)      # Initialize in world
-        self.state = kwargs.get('state', SPREADING) # Set initial state...
-        self.team  = kwargs.get('team', 'ally')     # Set the team
+        self.pos    = Vector.arr(position)           # Init vectors here?
+        self.vel    = Vector.arr(velocity)           # Init vectors here?
+        self.idx    = identifier
+        self.world  = kwargs.get('world', None)      # Initialize in world
+        self.state  = kwargs.get('state', SPREADING) # Set initial state...
+        self.team   = kwargs.get('team', 'ally')     # Set the team
+        self.home   = kwargs.get('home', None)       # Remember where home is
+        self.memory = []                             # Initialize the memory
 
         # Hidden variables to reduce computation complexity
-        self._pos  = None                           # Holder for new position
-        self._vel  = None                           # Holder for new velocity
+        self._pos    = None                          # Holder for new position
+        self._vel    = None                          # Holder for new velocity
+        self._state  = None                          # Holder for new state
+        self._target = None                          # Holder for new target
 
     def __repr__(self):
         type_name  = self.__class__.__name__
@@ -76,8 +80,13 @@ class Particle(object):
         """
         self.update_velocity()
         self.update_position()
+        self.update_state()
 
     def update_position(self):
+        """
+        Adds the velocity to get a new position, also ensures a periodic
+        world by using modulo against the width and height of the world.
+        """
         newpos = self.pos + self._vel
         x = newpos.x % self.world.size[0]
         y = newpos.y % self.world.size[1]
@@ -108,6 +117,61 @@ class Particle(object):
             newvel = wvec
 
         self._vel = newvel
+
+    def update_state(self):
+        """
+        Uses the finite state machine to update the current state.
+        Currently implementing the non-guarding flock
+
+        TODO: Have mineral sight distance be in config
+        TODO: Have this part be evolutionary ...
+        """
+
+        if self.state == SPREADING:
+            mineral = self.find_nearest(200, 360, 'mineral')
+            if mineral:
+                # TODO push memory on stack
+                self._target = mineral
+                self._state  = SEEKING
+                return
+
+        if self.state == SEEKING:
+            if self.pos.distance(self.target.pos) < 0.01:
+                # What to do if nothing remains?
+                self.target.mine()
+                self._target = self.home
+                self._state  = CARAVAN
+                return
+
+        if self.state == CARAVAN:
+            if self.pos.distance(self.target.pos) < 0.01:
+                if self.memory:
+                    self._target = self.memory[-1]
+                    self._state  = SEEKING
+                    return
+                else:
+                    self._target = None
+                    self._state  = SPREADING
+                    return
+
+        # Otherwise just keep current state.
+        self._state  = self.state
+        self._target = None
+
+    def blit(self):
+        """
+        Swap new pos/vel for old ones.
+        """
+        if self.state != self._state:
+            print "%s to %s" % (self.state, self._state)
+        self.pos     = self._pos
+        self.vel     = self._vel
+        self.state   = self._state
+        self.target  = self._target
+        self._pos    = None
+        self._vel    = None
+        self._state  = None
+        self._target = None
 
     ##////////////////////////////////////////////////////////////////////
     ## Helper Functions
@@ -144,7 +208,7 @@ class Particle(object):
 
         return True
 
-    def neighbors(self, radius, alpha):
+    def neighbors(self, radius, alpha, team='any'):
         """
         Finds the neighbors given a radius and an alpha
 
@@ -159,7 +223,11 @@ class Particle(object):
         nearby = lambda pos: self.in_sight(pos, radius, alpha)
 
         for agent in self.world.agents:
-            if agent is self: continue        # We're not in our own neighborhood
+
+            if agent is self: continue                  # We're not in our own neighborhood
+
+            if team != 'any' and agent.team != team:    # Filter based on the team type
+                continue
 
             # Check if the agent's position is in sight
             if nearby(agent.pos):
@@ -191,25 +259,12 @@ class Particle(object):
         """
         nearest  = None
         distance = None
-        for neighbor in self.neighbors(radius, alpha):
-
-            if team != 'any' and neighbor.team != team:
-                continue
-
-            d = np.linalg.norm(self.pos - neighbor.pos)
+        for neighbor in self.neighbors(radius, alpha, team):
+            distance = self.pos.distance(neighbor.pos)
             if distance is None or d < distance:
                 distance = d
                 nearest  = neighbor
         return nearest
-
-    def blit(self):
-        """
-        Swap new pos/vel for old ones.
-        """
-        self.pos  = self._pos
-        self.vel  = self._vel
-        self._pos = None
-        self._vel = None
 
     ##////////////////////////////////////////////////////////////////////
     ## Movement Behavior Velocity Components
