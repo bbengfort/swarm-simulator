@@ -36,13 +36,9 @@ def update(world):
     """
     Change to world.update so world can pass in neighbors.
     """
-    start = pygame.time.get_ticks()
     world.update()
-    end = pygame.time.get_ticks()
-    print "UPDATE", (end - start), "ticks"
 
 def draw(screen, world, baked, scale):
-    start = pygame.time.get_ticks()
     screen.fill(0xffffffff)
 
     for agent in world.agents:
@@ -53,8 +49,6 @@ def draw(screen, world, baked, scale):
         screen.blit(image, (x, y))
 
     pygame.display.flip()
-    end = pygame.time.get_ticks()
-    print "DRAW", (end - start), "ticks"
 
 def bake_rotations(image, scale, a0, steps):
     baked = []
