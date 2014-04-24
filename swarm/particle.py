@@ -55,7 +55,9 @@ class Particle(object):
         self.state = kwargs.get('state', SPREADING) # Set initial state...
         self.team  = kwargs.get('team', 'ally')     # Set the team
 
-        # Hidden variables to reduce computation
+        # Hidden variables to reduce computation complexity
+        self._pos  = None                           # Holder for new position
+        self._vel  = None                           # Holder for new velocity
 
     def __repr__(self):
         type_name  = self.__class__.__name__
@@ -76,10 +78,10 @@ class Particle(object):
         self.update_position()
 
     def update_position(self):
-        newpos = self.pos + self.newvel
+        newpos = self.pos + self._vel
         x = newpos.x % self.world.size[0]
         y = newpos.y % self.world.size[1]
-        self.newpos = Vector.arrp(x,y)
+        self._pos = Vector.arrp(x,y)
 
     def update_velocity(self):
         """
@@ -106,7 +108,7 @@ class Particle(object):
                 continue
             newvel = wvec
 
-        self.newvel = newvel
+        self._vel = newvel
 
     ##////////////////////////////////////////////////////////////////////
     ## Helper Functions
@@ -129,6 +131,20 @@ class Particle(object):
         if not self.world: return False
         return True
 
+    def in_sight(self, point, radius, alpha):
+        """
+        Determines whether or not another point (Vector) is in sight of the
+        current particule based on a given radius and alpha.
+        """
+        delta = point - self.pos
+        if delta.length > radius: return False # The distance is outside the vision radius
+
+        angle = self.vel.angle(delta)
+        alpha = alpha / 2
+        if angle > alpha: return False         # The angle is outside our vision angle from heading
+
+        return True
+
     def neighbors(self, radius, alpha):
         """
         Finds the neighbors given a radius and an alpha
@@ -136,27 +152,39 @@ class Particle(object):
         Is there a better way than running through all the agents and
         checking if they are within our neighborhood, for every single
         velocity component we check?!
-
-        TODO: Store neighborhood until blit
         """
 
         if not self.is_bound():
             raise Exception("Can only find neighbors for bound particles.")
 
+        nearby = lambda pos: self.in_sight(pos, radius, alpha)
+
         for agent in self.world.agents:
             if agent is self: continue        # We're not in our own neighborhood
 
-            distance = np.linalg.norm(self.pos-agent.pos)
-            if distance > radius: continue    # Outside of our own vision radius
-
-            # compute heading to other
-            delta = agent.pos - self.pos
-            angle = self.vel.angle(delta)
-            alpha = alpha / 2
-            if angle > alpha:
+            # Check if the agent's position is in sight
+            if nearby(agent.pos):
+                yield agent
                 continue
 
-            yield agent                       # The agent is a neighbor!
+            # World is periodic, check positions that wrap around world
+            width, height = self.world.size
+
+            if (self.pos.x < radius or self.pos.y < radius or
+                self.pos.x + radius >= width or
+                self.pos.y + radius >= height):
+
+                if nearby(Vector.arrp((self.pos.x-width), self.pos.y)):
+                    yield agent
+                    continue
+
+                if nearby(Vector.arrp(self.pos.x, self.pos.y-height)):
+                    yield agent
+                    continue
+
+                if nearby(Vector.arrp(self.pos.x-width, self.pos.y-height)):
+                    yield agent
+                    continue
 
     def find_nearest(self, radius, alpha, team="any"):
         """
@@ -179,8 +207,10 @@ class Particle(object):
         """
         Swap new pos/vel for old ones.
         """
-        self.pos = self.newpos
-        self.vel = self.newvel
+        self.pos  = self._pos
+        self.vel  = self._vel
+        self._pos = None
+        self._vel = None
 
     ##////////////////////////////////////////////////////////////////////
     ## Movement Behavior Velocity Components

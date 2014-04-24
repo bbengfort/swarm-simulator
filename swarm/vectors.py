@@ -25,7 +25,9 @@ import numpy as np
 
 class Vector(np.ndarray):
     """
-    Helper class for standard vector computations
+    Helper class for standard vector computations.
+
+    Note that vectors MUST be readonly.
     """
 
     ##////////////////////////////////////////////////////////////////////
@@ -37,7 +39,9 @@ class Vector(np.ndarray):
         """
         Constructor to initialze the array view
         """
-        return array.view(klass)
+        arr = array.view(klass)
+        arr.flags.writeable = False
+        return arr
 
     @classmethod
     def zero(klass):
@@ -79,27 +83,34 @@ class Vector(np.ndarray):
         """
         Returns the unit vector (length 1) of this vector
         """
-        if self.length > 0:
-            return self / self.length
-        return np.zeros_like(self)
+        if not hasattr(self, '_unit'):
+            if self.length > 0:
+                self._unit = self / self.length
+            else:
+                self._unit = np.zeros_like(self)
+        return self._unit
 
     @property
     def length(self):
         """
         Compute the length of the vector
         """
-        return np.linalg.norm(self)
+        if not hasattr(self, '_length'):
+            self._length = np.linalg.norm(self)
+        return self._length
 
     @property
     def orthogonal(self):
         """
         Returns the unit vector orthogonal in the +z direction
         """
-        u = self.unit
-        b = np.empty_like(u)
-        b[0] = -u[1]
-        b[1] = u[0]
-        return self.arr(b)
+        if not hasattr(self, '_orthogonal'):
+            u = self.unit
+            b = np.empty_like(u)
+            b[0] = -u[1]
+            b[1] = u[0]
+            self._orthogonal = self.arr(b)
+        return self._orthogonal
 
     def angle(self, other, degrees=True):
         """
@@ -116,32 +127,6 @@ class Vector(np.ndarray):
             return angle
 
         angle = angle_radians(self, other)
-        if degrees: return np.degrees(angle)
-        return angle
-
-    def heading(self, degrees=True):
-        """
-        Compute the heading of the vector, e.g the angle CW from "North",
-        which happens to be (1,0) (what we think of as East).
-        Note, this returns degrees!
-        """
-        return self.angle(Vector.arrp(1,0), degrees)
-
-    def relative_heading(self, other, heading=None, degrees=True):
-        """
-        Compute the heading from this point to another point.
-        This will return the degrees
-        """
-        # Computes the relative line
-        delta = other - self
-
-        # Compute the angle from the x axis using arctan, in [-180,180]
-        angle = np.arctan2(-delta.y, delta.x)
-
-        # Correct for the heading, otherwise heading is assumed to be x-axis
-        if heading is not None:
-            angle += heading
-
         if degrees: return np.degrees(angle)
         return angle
 

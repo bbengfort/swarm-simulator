@@ -29,6 +29,13 @@ from swarm.vectors import *
 
 class VectorsTests(unittest.TestCase):
 
+    def assertArrayNotWritable(self, arr):
+        """
+        Ensure that an array is not writable.
+        """
+        with self.assertRaisesRegexp(ValueError, "assignment destination is read-only"):
+            arr[0] = 1.0
+
     def test_arr_view(self):
         """
         Test vector contstruction from a np.array
@@ -38,6 +45,7 @@ class VectorsTests(unittest.TestCase):
         self.assertTrue(isinstance(vec, np.ndarray))
         self.assertEqual(vec.x, 10)
         self.assertEqual(vec.y, 10)
+        self.assertArrayNotWritable(vec)
 
     def test_zero_view(self):
         """
@@ -48,6 +56,7 @@ class VectorsTests(unittest.TestCase):
         self.assertTrue(isinstance(vec, np.ndarray))
         self.assertEqual(vec.x, 0)
         self.assertEqual(vec.y, 0)
+        self.assertArrayNotWritable(vec)
 
     def test_arrp_view(self):
         """
@@ -58,6 +67,7 @@ class VectorsTests(unittest.TestCase):
         self.assertTrue(isinstance(vec, np.ndarray))
         self.assertEqual(vec.x, 10)
         self.assertEqual(vec.y, 0)
+        self.assertArrayNotWritable(vec)
 
     def test_rand_high_view(self):
         """
@@ -70,6 +80,7 @@ class VectorsTests(unittest.TestCase):
         self.assertLess(vec.y, 12)
         self.assertGreaterEqual(vec.x, 0)
         self.assertGreaterEqual(vec.y, 0)
+        self.assertArrayNotWritable(vec)
 
     def test_rand_range_view(self):
         """
@@ -82,6 +93,7 @@ class VectorsTests(unittest.TestCase):
         self.assertLess(vec.y, 12)
         self.assertGreaterEqual(vec.x, 6)
         self.assertGreaterEqual(vec.y, 6)
+        self.assertArrayNotWritable(vec)
 
     def test_unit(self):
         """
