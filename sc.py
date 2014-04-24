@@ -27,4 +27,4 @@ points = {
 
 for name, point in points.items():
     #if name == 'a': continue
-    print "%s: %0.2f" % (name, a.heading(point, vel=vel))
+    print "%s: %0.2f" % (name, a.relative_heading(point, heading=vel.heading(False)))

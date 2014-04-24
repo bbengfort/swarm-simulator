@@ -119,16 +119,28 @@ class Vector(np.ndarray):
         if degrees: return np.degrees(angle)
         return angle
 
-    def heading(self, other, vel=None, degrees=True):
+    def heading(self, degrees=True):
+        """
+        Compute the heading of the vector, e.g the angle CW from "North",
+        which happens to be (1,0) (what we think of as East).
+        Note, this returns degrees!
+        """
+        return self.angle(Vector.arrp(1,0), degrees)
+
+    def relative_heading(self, other, heading=None, degrees=True):
         """
         Compute the heading from this point to another point.
         This will return the degrees
         """
+        # Computes the relative line
         delta = other - self
+
+        # Compute the angle from the x axis using arctan, in [-180,180]
         angle = np.arctan2(-delta.y, delta.x)
 
-        if vel is not None:
-            angle += vel.angle(Vector.arrp(1,0), False)
+        # Correct for the heading, otherwise heading is assumed to be x-axis
+        if heading is not None:
+            angle += heading
 
         if degrees: return np.degrees(angle)
         return angle
