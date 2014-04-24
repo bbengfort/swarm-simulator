@@ -55,6 +55,8 @@ class Particle(object):
         self.state = kwargs.get('state', SPREADING) # Set initial state...
         self.team  = kwargs.get('team', 'ally')     # Set the team
 
+        # Hidden variables to reduce computation
+
     def __repr__(self):
         type_name  = self.__class__.__name__
         identifier = self.idx or "anonymous"
@@ -74,9 +76,16 @@ class Particle(object):
         self.update_position()
 
     def update_position(self):
-        self.newpos = self.pos + self.newvel
+        newpos = self.pos + self.newvel
+        x = newpos.x % self.world.size[0]
+        y = newpos.y % self.world.size[1]
+        self.newpos = Vector.arrp(x,y)
 
     def update_velocity(self):
+        """
+        Instead of starting with velocity zero as in the ARod paper, we
+        implement 'intertia' by using the old velocity.
+        """
         vectors = []    # Tuples of vector components and their priority
         for component, parameters in self.components.items():
             # Get the method by name and compute
@@ -90,7 +99,7 @@ class Particle(object):
         vectors = sorted(vectors, key=lambda vp: vp[2].priority)
         #print [(comp, (vec * param.weight).length) for comp,vec,param in vectors]
 
-        newvel  = Vector.zero()
+        newvel  = Vector.arrp(self.vel.x, self.vel.y)
         for comp, vec, params in vectors:
             wvec = newvel + (params.weight * vec)
             if wvec.length > VMAX:
@@ -140,9 +149,12 @@ class Particle(object):
             distance = np.linalg.norm(self.pos-agent.pos)
             if distance > radius: continue    # Outside of our own vision radius
 
-            # This needs to be better...
-            angle = self.vel.angle(agent.pos)
-            if angle > alpha: continue        # Outside the angle of vision
+            # compute heading to other
+            delta = agent.pos - self.pos
+            angle = self.vel.angle(delta)
+            alpha = alpha / 2
+            if angle > alpha:
+                continue
 
             yield agent                       # The agent is a neighbor!
 
@@ -212,7 +224,7 @@ class Particle(object):
         deltav = Vector.arr(avgvel)
         vmaxrt = VMAX * deltav.unit
 
-        return vmaxrt * scale
+        return vmaxrt #* scale
 
     def avoidance(self):
         """

@@ -145,7 +145,6 @@ class Vector(np.ndarray):
         if degrees: return np.degrees(angle)
         return angle
 
-
     def distance(self, other):
         """
         Compute the Euclidean distance between two vectors

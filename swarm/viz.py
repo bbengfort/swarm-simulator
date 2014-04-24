@@ -12,7 +12,7 @@ def visualize(world, screen_size, fps):
              float(screen_size[1]) / world.size[1])
     clock = pygame.time.Clock()
     arrow = pygame.image.load("assets/arrow.png").convert_alpha()
-    arrow_baked = bake_rotations(arrow, 0.1, math.pi / 2, 128)
+    arrow_baked = bake_rotations(arrow, 0.06, math.pi / 2, 128)
     draw(screen, world, arrow_baked, scale)
     frame_time = 1000.0 / fps
     wait_time = frame_time

@@ -64,7 +64,7 @@ class World(object):
         setting = lambda name: kwargs.pop(name, parameters.get(name))
 
         # Initialize parameters from settings
-        self.size = setting('world_size')
+        self.size = (setting('world_size'), setting('world_size'))
         self.iterations = setting('maximum_time')
         self.deposits = setting('deposits')
 
