@@ -116,7 +116,7 @@ class Particle(object):
         # Sort the vectors by priority
         vectors = sorted(vectors, key=lambda vp: vp[2].priority)
 
-        newvel  = Vector.arrp(self.vel.x, self.vel.y)
+        newvel  = .5 * VMAX * self.vel.unit
         for comp, vec, params in vectors:
             wvec = newvel + (params.weight * vec)
             if wvec.length > VMAX:
