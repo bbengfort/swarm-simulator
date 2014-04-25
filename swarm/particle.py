@@ -134,10 +134,16 @@ class Particle(object):
         TODO: Have this part be evolutionary ...
         """
 
+        # Initially, we just remain in our current state.
+        self._state  = self.state
+        self._target = self.target
+        self._loaded = self.loaded
+
         if self.state == SPREADING:
             mineral = self.find_nearest(200, 360, 'mineral')
             if mineral:
-                # TODO push memory on stack
+                # TODO push memory on stack (for all seen minerals, not just closest)
+                self.memory.append(mineral)
                 self._target = mineral
                 self._state  = SEEKING
                 return
@@ -153,9 +159,11 @@ class Particle(object):
                 elif self.memory:
                     self._target = self.memory[-1]
                     self._state  = SEEKING
+                    return
                 else:
                     self._target = None
                     self._state  = SPREADING
+                    return
 
         if self.state == CARAVAN:
             if self.pos.distance(self.target.pos) < 10:
@@ -170,14 +178,19 @@ class Particle(object):
                     self._state  = SPREADING
                     return
 
-        # Otherwise just keep current state.
-        self._state  = self.state
-        self._target = None
 
     def blit(self):
         """
         Swap new pos/vel for old ones.
         """
+        if parameters.debug:
+            print "Particle %s" % self.idx
+            print "Position: %s --> %s" % (self.pos, self._pos)
+            print "Velocity: %s --> %s" % (self.vel, self._vel)
+            print "State:    %s --> %s" % (self.state, self._state)
+            print "Target:   %s --> %s" % (self.target, self._target)
+            print "Loaded:   %s --> %s" % (self.loaded, self._loaded)
+            print
         self.pos     = self._pos
         self.vel     = self._vel
         self.state   = self._state
@@ -389,11 +402,11 @@ class Particle(object):
 
         How do we store a target?
         """
-        if not hasattr(self, 'target'):
+        if not hasattr(self, 'target') or self.target is None:
             raise Exception("In Seeking, the particle must have a target")
 
         direction = self.target.pos - self.pos
-        return VMAX * (direction / direction.length)
+        return VMAX * (direction.unit)
 
     def clearance(self):
         """
@@ -410,11 +423,11 @@ class Particle(object):
         """
         Reports the homing velocity component to move the agent to a point
         """
-        if not hasattr(self, 'target'):
+        if not hasattr(self, 'target') or self.target is None:
             raise Exception("In Homing, the particle must have a target")
 
         direction = self.target.pos - self.pos
-        return VMAX * (direction / direction.length)
+        return VMAX * (direction.unit)
 
 ##########################################################################
 ## Resource Object

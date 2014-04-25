@@ -7,7 +7,7 @@
 
 debug: true             # Are we in DEBUG mode?
 maximum_velocity: 12    # What is the maximum velocity of any node?
-team_size: 50           # How many agents in each team?
+team_size: 10           # How many agents in each team?
 deposits: 12            # How many resource deposits?
 stash_size: 80          # Resources per deposit
 maximum_time: 40000     # End of time?
@@ -41,7 +41,7 @@ spreading:
             alpha: 115
         cohesion:
             priority: 5
-            weight: 0.83
+            weight: 0.3
             radius: 300
             alpha: 360
 
@@ -53,7 +53,7 @@ seeking:
             weight: 0.83
             radius: 100
             alpha: 180
-        seek:
+        seeking:
             priority: 2
             weight: 0.66
             radius: 250

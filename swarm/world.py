@@ -27,7 +27,7 @@ from circle import circular_distribute
 ##########################################################################
 
 # The team for home needs to be mineral for competative...
-BASE = ResourceParticle(Vector.arrp(300,300), identifier="ally_home", team="base")
+BASE = ResourceParticle(Vector.arrp(300,300), identifier="ally_home", team="base", stash_size=0)
 
 def initialize_particles(**kwargs):
     """
