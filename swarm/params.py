@@ -262,7 +262,7 @@ class SimulationParameters(Configuration):
     # Seeking Movement Behavior
     seeking          = MovementBehavior({
         'avoidance':   VelocityComponent(1, 0.83, 100, 180),
-        'seek':        VelocityComponent(2, 0.66, 250, 360),
+        'seeking':     VelocityComponent(2, 0.66, 250, 360),
         'separation':  VelocityComponent(3, 0.25, 50, 90),
     })
 
@@ -281,6 +281,22 @@ class SimulationParameters(Configuration):
         'mineral_cohesion': VelocityComponent(3, 0.62, 150, 360),
     })
 
+    @property
+    def max_radius(self):
+        """
+        Reports the maximum radius of all the movement behaviors.
+        This is used to optimize neighborhood searching on the particles.
+        """
+        if not hasattr(self, '_max_radius'):
+            # Make sure to update this list!
+            behaviors = (self.spreading, self.seeking, self.caravan, self.guarding)
+            self._max_radius = None
+            for behavior in behaviors:
+                for component in behavior.components.values():
+                    if self._max_radius is None or component.radius > self._max_radius:
+                        if isinstance(component.radius, str): continue
+                        self._max_radius = component.radius
+        return self._max_radius
 
 
 ##########################################################################

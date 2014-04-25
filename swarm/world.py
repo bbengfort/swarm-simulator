@@ -26,6 +26,9 @@ from circle import circular_distribute
 ## Helper functions
 ##########################################################################
 
+# The team for home needs to be mineral for competative...
+BASE = ResourceParticle(Vector.arrp(300,300), identifier="ally_home", team="base")
+
 def initialize_particles(**kwargs):
     """
     Initialize N particles in a circular distribution around a center
@@ -48,7 +51,7 @@ def initialize_particles(**kwargs):
         position = Vector.arrp(*coord)
         velocity = Vector.rand(maxvel) if maxvel > 0 else Vector.zero()
         name     = team % (idx+1)
-        yield klass(position, velocity, name)
+        yield klass(position, velocity, name, team='ally', home=BASE)
 
 def initialize_resources(**kwargs):
     """
@@ -99,6 +102,9 @@ class World(object):
             self.add_agents(kwargs['agents'])
         else:
             self.add_agents(initialize_particles())
+
+        # Initialize the base
+        self.add_agent(BASE)
 
         # Initialize resources
         self.add_agents(initialize_resources())

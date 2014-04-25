@@ -24,6 +24,7 @@ from swarm.particle import *
 from swarm.world import World
 from swarm.vectors import Vector
 from swarm.params import parameters
+from world_tests import NUM_BASES
 
 ##########################################################################
 ## Particle Test Cases
@@ -50,7 +51,7 @@ class ParticleTests(unittest.TestCase):
         """
         Test the neighbors of particle A in a given radius
         """
-        expected = {'a', 'b', 'c', 'd', 'e', 'g'}
+        expected = {'a', 'b', 'c', 'd', 'e', 'g', 'ally_home'}
         for particle in self.particle.neighbors(150, 360):
             self.assertIn(particle.idx, expected)
 
@@ -216,10 +217,10 @@ class ResourceParticleTests(unittest.TestCase):
         """
         Assert that resources have been initialized in world
         """
-        deposits = parameters.get('deposits', 12)
+        deposits = parameters.get('deposits', 12) + NUM_BASES
         self.assertEqual(len(self.world.agents), deposits)
         for agent in self.world.agents:
-            self.assertEqual(agent.team, 'mineral')
+            self.assertIn(agent.team, {'mineral', 'base'})
 
     def test_update(self):
         """

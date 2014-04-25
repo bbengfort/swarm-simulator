@@ -75,8 +75,8 @@ caravan:
         homing:
             priority: 2
             weight: 0.83
-            radius: nil
-            alpha: nil
+            radius: null
+            alpha: null
         separation:
             priority: 3
             weight: 0.83

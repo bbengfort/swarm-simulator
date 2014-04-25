@@ -35,6 +35,9 @@ GUARDING  = "guarding"
 ## Maximum Velocity
 VMAX      = parameters.get('maximum_velocity')
 
+## Maximum Search Radius (used to boost performance of neighborhood search)
+RMAX      = parameters.max_radius
+
 ##########################################################################
 ## Particle Object
 ##########################################################################
@@ -57,12 +60,15 @@ class Particle(object):
         self.home   = kwargs.get('home', None)       # Remember where home is
         self.memory = []                             # Initialize the memory
         self.target = None                           # Initialize target
+        self.loaded = False                          # Are we carrying minerals or not?
 
         # Hidden variables to reduce computation complexity
         self._pos    = None                          # Holder for new position
         self._vel    = None                          # Holder for new velocity
         self._state  = None                          # Holder for new state
         self._target = None                          # Holder for new target
+        self._loaded = None                          # Holder for loaded state
+        self._neighbors = None                       # Holder for neighbors in RMAX
 
     def __repr__(self):
         type_name  = self.__class__.__name__
@@ -137,15 +143,24 @@ class Particle(object):
                 return
 
         if self.state == SEEKING:
-            if self.pos.distance(self.target.pos) < 0.01:
+            if self.pos.distance(self.target.pos) < 10:
                 # What to do if nothing remains?
-                self.target.mine()
-                self._target = self.home
-                self._state  = CARAVAN
-                return
+                self._loaded = self.target.mine()
+                if self.loaded:
+                    self._target = self.home
+                    self._state  = CARAVAN
+                    return
+                elif self.memory:
+                    self._target = self.memory[-1]
+                    self._state  = SEEKING
+                else:
+                    self._target = None
+                    self._state  = SPREADING
 
         if self.state == CARAVAN:
-            if self.pos.distance(self.target.pos) < 0.01:
+            if self.pos.distance(self.target.pos) < 10:
+                self.target.drop()
+                self._loaded = False
                 if self.memory:
                     self._target = self.memory[-1]
                     self._state  = SEEKING
@@ -167,10 +182,13 @@ class Particle(object):
         self.vel     = self._vel
         self.state   = self._state
         self.target  = self._target
+        self.loaded  = self._loaded
         self._pos    = None
         self._vel    = None
         self._state  = None
         self._target = None
+        self._loaded = None
+        self._neighbors = None
 
     def copy(self):
         """
@@ -216,21 +234,25 @@ class Particle(object):
 
         return True
 
-    def neighbors(self, radius, alpha, team='any'):
+    def neighbors(self, radius, alpha, team='any', source='internal'):
         """
         Finds the neighbors given a radius and an alpha
 
-        Is there a better way than running through all the agents and
-        checking if they are within our neighborhood, for every single
-        velocity component we check?!
+        Only checks neighbors that are within RMAX (the maximum radius of
+        any movement component), therefore only evaluates the entire agent
+        space once per update rather than for every movmement behavior.
         """
 
         if not self.is_bound():
             raise Exception("Can only find neighbors for bound particles.")
 
+        if source=='internal' and self._neighbors is None:
+            self._neighbors = list(self.neighbors(RMAX, 360, team='any', source='world'))
+
+        source = self._neighbors if source == 'internal' else self.world.agents
         nearby = lambda pos: self.in_sight(pos, radius, alpha)
 
-        for agent in self.world.agents:
+        for agent in source:
 
             if agent is self: continue                  # We're not in our own neighborhood
 
@@ -284,7 +306,7 @@ class Particle(object):
         """
         r = self.components['cohesion'].radius
         a = self.components['cohesion'].alpha
-        neighbors = list(self.neighbors(r,a))
+        neighbors = list(self.neighbors(r,a, team='ally'))
 
         if not neighbors:
             return Vector.zero()
@@ -302,7 +324,7 @@ class Particle(object):
         """
         r = self.components['alignment'].radius
         a = self.components['alignment'].alpha
-        neighbors = list(self.neighbors(r,a))
+        neighbors = list(self.neighbors(r,a, team='ally'))
 
         if not neighbors:
             return Vector.zero()
@@ -329,7 +351,7 @@ class Particle(object):
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
-        target = self.find_nearest(r, a, 'enemy')
+        target = self.find_nearest(r, a, team='enemy')
 
         if not target:
             return Vector.zero()
@@ -348,7 +370,7 @@ class Particle(object):
         """
         r = self.components['separation'].radius
         a = self.components['separation'].alpha
-        neighbors = list(self.neighbors(r,a))
+        neighbors = list(self.neighbors(r,a, team='ally'))
 
         if not neighbors:
             return Vector.zero()
@@ -379,7 +401,7 @@ class Particle(object):
         """
         r = self.components['clearance'].radius
         a = self.components['clearance'].alpha
-        neighbors = list(self.neighbors(r,a))
+        neighbors = list(self.neighbors(r,a, team='ally'))
         if neighbors:
             return VMAX * self.vel.orthogonal
         return Vector.zero()
@@ -418,13 +440,21 @@ class ResourceParticle(Particle):
 
     def mine(self):
         """
-        Decrements the stack by one and returns True if there is anything
+        Decrements the stash by one and returns True if there is anything
         left, otherwise returns False if this thing is unminable.
         """
         if self.stash > 0:
             self.stash -= 1
             return True
         return False
+
+    def drop(self):
+        """
+        Increments the stash by one - e.g. when you're adding resources to
+        a home ResourceParticle - always returns true.
+        """
+        self.stash += 1
+        return True
 
     def __nonzero__(self):
         return self.stash > 0

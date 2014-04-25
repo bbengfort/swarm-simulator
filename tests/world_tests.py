@@ -26,6 +26,8 @@ from swarm.params import parameters
 ## World Test Case
 ##########################################################################
 
+NUM_BASES = 1
+
 class WorldTests(unittest.TestCase):
 
     def test_world_init(self):
@@ -34,7 +36,7 @@ class WorldTests(unittest.TestCase):
         """
         world = World()
 
-        expected = parameters.get('team_size') + parameters.get('deposits')
+        expected = parameters.get('team_size') + parameters.get('deposits') + NUM_BASES
         self.assertEqual(len(world.agents), expected)
 
     def test_agents_init(self):
