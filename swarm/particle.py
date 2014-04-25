@@ -56,6 +56,7 @@ class Particle(object):
         self.team   = kwargs.get('team', 'ally')     # Set the team
         self.home   = kwargs.get('home', None)       # Remember where home is
         self.memory = []                             # Initialize the memory
+        self.target = None                           # Initialize target
 
         # Hidden variables to reduce computation complexity
         self._pos    = None                          # Holder for new position
@@ -162,8 +163,6 @@ class Particle(object):
         """
         Swap new pos/vel for old ones.
         """
-        if self.state != self._state:
-            print "%s to %s" % (self.state, self._state)
         self.pos     = self._pos
         self.vel     = self._vel
         self.state   = self._state
@@ -172,6 +171,15 @@ class Particle(object):
         self._vel    = None
         self._state  = None
         self._target = None
+
+    def copy(self):
+        """
+        Returns an unbound copy of the particle without its memory.
+        """
+        return self.__class__(
+            self.pos.copy(), self.vel.copy(), self.idx,
+            team=self.team, state=self.state, home=self.home,
+        )
 
     ##////////////////////////////////////////////////////////////////////
     ## Helper Functions
@@ -241,15 +249,15 @@ class Particle(object):
                 self.pos.x + radius >= width or
                 self.pos.y + radius >= height):
 
-                if nearby(Vector.arrp((self.pos.x-width), self.pos.y)):
+                if nearby(Vector.arrp((agent.pos.x-width), agent.pos.y)):
                     yield agent
                     continue
 
-                if nearby(Vector.arrp(self.pos.x, self.pos.y-height)):
+                if nearby(Vector.arrp(agent.pos.x, agent.pos.y-height)):
                     yield agent
                     continue
 
-                if nearby(Vector.arrp(self.pos.x-width, self.pos.y-height)):
+                if nearby(Vector.arrp(agent.pos.x-width, agent.pos.y-height)):
                     yield agent
                     continue
 
@@ -260,7 +268,7 @@ class Particle(object):
         nearest  = None
         distance = None
         for neighbor in self.neighbors(radius, alpha, team):
-            distance = self.pos.distance(neighbor.pos)
+            d = self.pos.distance(neighbor.pos)
             if distance is None or d < distance:
                 distance = d
                 nearest  = neighbor

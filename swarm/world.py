@@ -85,9 +85,11 @@ class World(object):
         setting = lambda name: kwargs.pop(name, parameters.get(name))
 
         # Initialize parameters from settings
-        self.size = (setting('world_size'), setting('world_size'))
+        world_size = setting('world_size')
+        self.size = (world_size, world_size)
         self.iterations = setting('maximum_time')
         self.deposits = setting('deposits')
+        self.time = 0
 
         # Create an empty agents list
         self.agents = []
@@ -114,3 +116,4 @@ class World(object):
             agent.update()
         for agent in self.agents:
             agent.blit()
+        self.time += 1

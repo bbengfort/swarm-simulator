@@ -136,6 +136,12 @@ class Vector(np.ndarray):
         """
         return np.linalg.norm(self-other)
 
+    def copy(self):
+        """
+        Returns a copy of this vector
+        """
+        return self.__class__.arrp(*self)
+
     def __eq__(self, other):
         """
         Are two vectors equal?

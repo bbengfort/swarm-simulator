@@ -213,3 +213,12 @@ class VectorsTests(unittest.TestCase):
         self.assertIsNot(A, B)
         self.assertEqual(A, B)
         self.assertNotEqual(A, C)
+
+    def test_copy(self):
+        """
+        Check that you can copy a readonly vector
+        """
+        A = Vector.arrp(23, 52)
+        B = A.copy()
+        self.assertIsNot(A,B)
+        self.assertEqual(A,B)
