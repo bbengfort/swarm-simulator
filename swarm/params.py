@@ -47,6 +47,8 @@ dictionary-like access.
 
 import os
 import yaml
+import fileinput
+import re
 
 from copy import deepcopy
 
@@ -104,6 +106,24 @@ class Configuration(object):
                 with open(path, 'r') as conf:
                     config.configure(yaml.load(conf))
         return config
+ 
+    @classmethod
+    def load_file(klass, path):
+        """
+        Instantiates the configuration by attempting to load the
+        configuration from the YAML file at the given path.
+        """
+        config = klass()
+        with open(path, 'r') as conf:
+            config.configure(yaml.load(conf))
+        return config
+
+    def dump_file(self, path):
+        yaml.dump(dict(self.options()), open(path, 'w'), default_flow_style=False)
+
+        # kludgy way of removing the type tags
+        for line in fileinput.input(path, inplace = True):
+            print re.sub(r'!!.*$', '', line),
 
     def configure(self, conf={}):
         """
