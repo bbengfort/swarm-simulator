@@ -28,10 +28,10 @@ spreading:
             priority: 2
             weight: 0.83
             radius: 150
-            alpha: 180
+            alpha: 360
         clearance:
             priority: 3
-            weight: 0.83
+            weight: 0.0
             radius: 150
             alpha: 115
         alignment:
@@ -41,7 +41,7 @@ spreading:
             alpha: 115
         cohesion:
             priority: 5
-            weight: 0.3
+            weight: 0.83
             radius: 300
             alpha: 360
 

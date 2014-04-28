@@ -119,7 +119,9 @@ class Configuration(object):
         return config
 
     def dump_file(self, path):
-        yaml.dump(dict(self.options()), open(path, 'w'), default_flow_style=False)
+        file = open(path, 'w')
+        yaml.dump(dict(self.options()), file, default_flow_style=False)
+        file.close()
 
         # kludgy way of removing the type tags
         for line in fileinput.input(path, inplace = True):

@@ -33,6 +33,7 @@ class Evolver(object):
             path = dir_path + "/%s_%s.fit" % ("0".zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len))
             file = open(path, 'w')
             file.write(str(random.randrange(0, 300)))
+            file.close()
 
     @classmethod
     def evolve(klass, generation, dir_path = "."):
@@ -44,11 +45,15 @@ class Evolver(object):
             fitness = int(open(path + ".fit", 'r').readline())
             curr_gen.append((config, fitness))
 
-        next_gen = []
+        curr_gen = sorted(curr_gen, key=lambda x: x[1], reverse = True)
+
+        stats_file = open(dir_path + "/%s.stats" % (str(generation).zfill(Evolver.gen_len),), 'w')
+        stats_file.write("Best fitness: %d\n" % curr_gen[0][1])
+        stats_file.write("Median fitness: %d\n" % curr_gen[POPSIZE / 2][1])
+        stats_file.close()
 
         # Elitism: always carry forward the best of the previous generation
-        curr_gen = sorted(curr_gen, key=lambda x: x[1], reverse = True)
-        next_gen.append(curr_gen[0])
+        next_gen = [curr_gen[0]]
 
         # Reproduce by tournament selection
         while len(next_gen)< POPSIZE:

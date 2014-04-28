@@ -102,7 +102,7 @@ class Particle(object):
     def update_velocity(self):
         """
         Instead of starting with velocity zero as in the ARod paper, we
-        implement 'intertia' by using the old velocity.
+        implement 'inertia' by using the old velocity.
         """
         vectors = []    # Tuples of vector components and their priority
         for component, parameters in self.components.items():
@@ -114,14 +114,14 @@ class Particle(object):
                 raise Exception("No method on %r, '%s'" % (self, component))
 
         # Sort the vectors by priority
-        vectors = sorted(vectors, key=lambda vp: vp[2].priority)
+        # vectors = sorted(vectors, key=lambda vp: vp[2].priority)
 
-        newvel  = .5 * VMAX * self.vel.unit
+        newvel = self.vel
         for comp, vec, params in vectors:
-            wvec = newvel + (params.weight * vec)
-            if wvec.length > VMAX:
-                continue
-            newvel = wvec
+            newvel = newvel + (params.weight * vec)
+
+        if newvel.length > VMAX:
+            newvel = VMAX * newvel.unit
 
         self._vel = newvel
 
@@ -149,7 +149,7 @@ class Particle(object):
                 return
 
         if self.state == SEEKING:
-            if self.pos.distance(self.target.pos) < 10:
+            if self.pos.distance(self.target.relative_pos(self.pos)) < 10:
                 # What to do if nothing remains?
                 self._loaded = self.target.mine()
                 if self.loaded:
@@ -166,7 +166,7 @@ class Particle(object):
                     return
 
         if self.state == CARAVAN:
-            if self.pos.distance(self.target.pos) < 10:
+            if self.pos.distance(self.target.relative_pos(self.pos)) < 10:
                 self.target.drop()
                 self._loaded = False
                 if self.memory:
@@ -177,7 +177,6 @@ class Particle(object):
                     self._target = None
                     self._state  = SPREADING
                     return
-
 
     def blit(self):
         """
@@ -247,6 +246,17 @@ class Particle(object):
 
         return True
 
+    def relative_pos(self, point):
+        size_x = self.world.size[0]
+        size_y = self.world.size[1]
+        rel_x = self.pos.x
+        rel_y = self.pos.y
+        if (abs(self.pos.x - point.x) > size_x / 2):
+            rel_x += (-1 if (self.pos.x - point.x) > 0 else 1) * size_x
+        if (abs(self.pos.y - point.y) > size_y/ 2):
+            rel_y += (-1 if (self.pos.y - point.y) > 0 else 1) * size_y
+        return Vector.arrp(rel_x, rel_y)
+
     def neighbors(self, radius, alpha, team='any', source='internal'):
         """
         Finds the neighbors given a radius and an alpha
@@ -273,28 +283,9 @@ class Particle(object):
                 continue
 
             # Check if the agent's position is in sight
-            if nearby(agent.pos):
+            if nearby(agent.relative_pos(self.pos)):
                 yield agent
                 continue
-
-            # World is periodic, check positions that wrap around world
-            width, height = self.world.size
-
-            if (self.pos.x < radius or self.pos.y < radius or
-                self.pos.x + radius >= width or
-                self.pos.y + radius >= height):
-
-                if nearby(Vector.arrp((agent.pos.x-width), agent.pos.y)):
-                    yield agent
-                    continue
-
-                if nearby(Vector.arrp(agent.pos.x, agent.pos.y-height)):
-                    yield agent
-                    continue
-
-                if nearby(Vector.arrp(agent.pos.x-width, agent.pos.y-height)):
-                    yield agent
-                    continue
 
     def find_nearest(self, radius, alpha, team="any"):
         """
@@ -303,7 +294,7 @@ class Particle(object):
         nearest  = None
         distance = None
         for neighbor in self.neighbors(radius, alpha, team):
-            d = self.pos.distance(neighbor.pos)
+            d = self.pos.distance(neighbor.relative_pos(self.pos))
             if distance is None or d < distance:
                 distance = d
                 nearest  = neighbor
@@ -315,7 +306,7 @@ class Particle(object):
 
     def cohesion(self):
         """
-        Reports coehesion velocity from an array of neighbors
+        Reports cohesion velocity from an array of neighbors
         """
         r = self.components['cohesion'].radius
         a = self.components['cohesion'].alpha
@@ -324,7 +315,7 @@ class Particle(object):
         if not neighbors:
             return Vector.zero()
 
-        center = np.average(list(n.pos for n in neighbors), axis=0)
+        center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
         delta  = center - self.pos
 
         scale  = (delta.length / r) ** 2
@@ -337,21 +328,20 @@ class Particle(object):
         """
         r = self.components['alignment'].radius
         a = self.components['alignment'].alpha
-        neighbors = list(self.neighbors(r,a, team='ally'))
+        neighbors = [x for x in list(self.neighbors(r,a, team='ally')) if x.state != CARAVAN]
 
         if not neighbors:
             return Vector.zero()
 
-        center = np.average(list(n.pos for n in neighbors), axis=0)
+        center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
         deltap = center - self.pos
         scale  = (deltap.length / r) ** 2
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
-        #deltav = avgvel - self.vel     # Why are we subtracting the average velocity from ours? Makes no sense.
+        #deltav = avgvel - self.vel
         deltav = Vector.arr(avgvel)
-        vmaxrt = VMAX * deltav.unit
 
-        return vmaxrt #* scale
+        return VMAX * deltav.unit * scale
 
     def avoidance(self):
         """
@@ -388,7 +378,7 @@ class Particle(object):
         if not neighbors:
             return Vector.zero()
 
-        center = np.average(list(n.pos for n in neighbors), axis=0)
+        center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
         delta  = center - self.pos
 
         scale  = ((r - delta.length) / r) ** 2
@@ -405,12 +395,12 @@ class Particle(object):
         if not hasattr(self, 'target') or self.target is None:
             raise Exception("In Seeking, the particle must have a target")
 
-        direction = self.target.pos - self.pos
+        direction = self.target.relative_pos(self.pos) - self.pos
         return VMAX * (direction.unit)
 
     def clearance(self):
         """
-        Reports the clearance velocity orthoganol to current velocity
+        Reports the clearance velocity orthogonal to current velocity
         """
         r = self.components['clearance'].radius
         a = self.components['clearance'].alpha
@@ -426,7 +416,7 @@ class Particle(object):
         if not hasattr(self, 'target') or self.target is None:
             raise Exception("In Homing, the particle must have a target")
 
-        direction = self.target.pos - self.pos
+        direction = self.target.relative_pos(self.pos) - self.pos
         return VMAX * (direction.unit)
 
 ##########################################################################
