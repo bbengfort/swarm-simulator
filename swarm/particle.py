@@ -404,9 +404,14 @@ class Particle(object):
         """
         r = self.components['clearance'].radius
         a = self.components['clearance'].alpha
+
         neighbors = list(self.neighbors(r,a, team='ally'))
         if neighbors:
-            return VMAX * self.vel.orthogonal
+            center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
+            delta  = center - self.pos
+            if (np.cross(delta, self.vel) < 0):
+                delta *= -1
+            return VMAX * delta.orthogonal
         return Vector.zero()
 
     def homing(self):
