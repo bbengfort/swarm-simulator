@@ -11,13 +11,25 @@ def visualize(world, screen_size, fps):
     scale = (float(screen_size[0]) / world.size[0],
              float(screen_size[1]) / world.size[1])
     clock = pygame.time.Clock()
-    arrow = pygame.image.load("assets/arrow.png").convert_alpha()
-    arrow_l = pygame.image.load("assets/arrow_loaded.png").convert_alpha()
-    mine  = pygame.image.load("assets/ore.png").convert_alpha()
-    arrow_baked = bake_rotations(arrow, 0.05, math.pi / 2, 128)
-    arrow_l_baked = bake_rotations(arrow_l, 0.05, math.pi / 2, 128)
-    mine_baked  = bake_rotations(mine, 0.5, math.pi / 2, 128)
-    draw(screen, world, arrow_baked, arrow_l_baked, scale, mine_baked)
+    ally_0 = pygame.image.load("assets/arrow_0_ally.png").convert_alpha()
+    ally_1 = pygame.image.load("assets/arrow_1_ally.png").convert_alpha()
+    enemy_0 = pygame.image.load("assets/arrow_0_enemy.png").convert_alpha()
+    enemy_1 = pygame.image.load("assets/arrow_1_enemy.png").convert_alpha()
+    mine_3  = pygame.image.load("assets/ore.png").convert_alpha()
+    mine_2  = pygame.image.load("assets/ore_2.png").convert_alpha()
+    mine_1  = pygame.image.load("assets/ore_1.png").convert_alpha()
+    mine_0  = pygame.image.load("assets/ore_0.png").convert_alpha()
+
+    ally_0_baked = bake_rotations(ally_0, 0.05, math.pi / 2, 128)
+    ally_1_baked = bake_rotations(ally_1, 0.05, math.pi / 2, 128)
+    enemy_0_baked = bake_rotations(enemy_0, 0.05, math.pi / 2, 128)
+    enemy_1_baked = bake_rotations(enemy_1, 0.05, math.pi / 2, 128)
+    mine_3_baked  = bake_rotations(mine_3, 0.5, math.pi / 2, 128)
+    mine_2_baked  = bake_rotations(mine_2, 0.5, math.pi / 2, 128)
+    mine_1_baked = bake_rotations(mine_1, 0.5, math.pi / 2, 128)
+    mine_0_baked  = bake_rotations(mine_0, 0.5, math.pi / 2, 128)
+
+    draw(screen, world, ally_0_baked, ally_1_baked, enemy_0_baked, enemy_1_baked, scale, mine_0_baked, mine_1_baked, mine_2_baked, mine_3_baked)
     frame_time = 1000.0 / fps
     wait_time = frame_time
     running = True
@@ -32,7 +44,7 @@ def visualize(world, screen_size, fps):
         if wait_time <= 0:
             wait_time = frame_time
             update(world)
-            draw(screen, world, arrow_baked, arrow_l_baked, scale, mine_baked)
+            draw(screen, world, ally_0_baked, ally_1_baked, enemy_0_baked, enemy_1_baked, scale, mine_0_baked, mine_1_baked, mine_2_baked, mine_3_baked)
 
     pygame.quit()
 
@@ -42,7 +54,7 @@ def update(world):
     """
     world.update()
 
-def draw(screen, world, baked, lbaked, scale, mine):
+def draw(screen, world, ally_0, ally_1, enemy_0, enemy_1, scale, mine_0, mine_1, mine_2, mine_3):
     screen.fill(0xffffffff)
 
     for agent in world.agents:
@@ -50,11 +62,24 @@ def draw(screen, world, baked, lbaked, scale, mine):
 
         # HACK! Kevin- go ahead and fix this!
         if agent.__class__.__name__ == "ResourceParticle":
-            image = rotation(mine, angle)
-        elif agent.loaded:
-            image = rotation(lbaked, angle)
+            if (agent.stash > 50):
+                image = rotation(mine_3, angle)
+            elif (agent.stash > 25):
+                image = rotation(mine_2, angle)
+            elif (agent.stash > 0):
+                image = rotation(mine_1, angle)
+            else:
+                image = rotation(mine_0, angle)
+        elif agent.team == "ally":
+            if agent.loaded:
+                image = rotation(ally_1, angle)
+            else:
+                image = rotation(ally_0, angle)
         else: 
-            image = rotation(baked, angle)
+            if agent.loaded:
+                image = rotation(enemy_1, angle)
+            else:
+                image = rotation(enemy_0, angle)
         # HACK OVER!
 
         x = agent.pos[0] * scale[0] - image.get_width() / 2

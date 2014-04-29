@@ -27,7 +27,8 @@ from circle import circular_distribute
 ##########################################################################
 
 # The team for home needs to be mineral for competative...
-BASE = ResourceParticle(Vector.arrp(300,300), identifier="ally_home", team="base", stash_size=0)
+ALLY_HOME = ResourceParticle(Vector.arrp(750,750), identifier="ally_home", stash_size=0)
+ENEMY_HOME = ResourceParticle(Vector.arrp(2250,2250), identifier="enemy_home", stash_size=0)
 
 def initialize_particles(**kwargs):
     """
@@ -40,39 +41,30 @@ def initialize_particles(**kwargs):
     # Initialize variables needed to do initialization
     klass  = kwargs.get('type', Particle)
     number = kwargs.get('number', parameters.get('team_size'))
-    center = kwargs.get('center', (300,300))
+    center = kwargs.get('center', (750,750))
     radius = kwargs.get('radius', 100)
-    team   = kwargs.get('team', 'ally%02i')
+    team   = kwargs.get('team', 'ally')
     maxvel = kwargs.get('maximum_velocity', parameters.get('maximum_velocity'))
+    home   = kwargs.get('home', ALLY_HOME)
 
     # Generate coordinates and particles
     coords = zip(*circular_distribute(num=number, center=center, r=radius))
     for idx, coord in enumerate(coords):
         position = Vector.arrp(*coord)
         velocity = Vector.rand(maxvel) if maxvel > 0 else Vector.zero()
-        name     = team % (idx+1)
-        yield klass(position, velocity, name, team='ally', home=BASE)
+        name     = team + "%02i" % (idx+1)
+        yield klass(position, velocity, name, team=team, home=home)
 
 def initialize_resources(**kwargs):
     """
-    Initialize N resources in a circular distribution around a center
-    point, where N=number. Similar to the particle initator, but has
-    mineral specific initialization tasks like no velocity.
     """
 
-    # Initialize variables needed to do initialization
     klass  = kwargs.get('type', ResourceParticle)
-    number = kwargs.get('number', parameters.get('deposits'))
-    center = kwargs.get('center', (2000,1500))
-    radius = kwargs.get('radius', 200)
-    team   = kwargs.get('team', 'mineral%02i')
-
-    # Generate coordinates and particles
-    coords = zip(*circular_distribute(num=number, center=center, r=radius))
-    for idx, coord in enumerate(coords):
-        position = Vector.arrp(*coord)
-        name     = team % (idx+1)
-        yield klass(position, identifier=name)
+    yield klass(Vector.arrp( 500, 2500), identifier="mineral01")
+    yield klass(Vector.arrp(1000, 2000), identifier="mineral02")
+    yield klass(Vector.arrp(1500, 1500), identifier="mineral03")
+    yield klass(Vector.arrp(2000, 1000), identifier="mineral04")
+    yield klass(Vector.arrp(2500,  500), identifier="mineral05")
 
 ##########################################################################
 ## The world environment for a simulation
@@ -103,8 +95,11 @@ class World(object):
         else:
             self.add_agents(initialize_particles())
 
-        # Initialize the base
-        self.add_agent(BASE)
+        self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
+
+        # Initialize the bases
+        self.add_agent(ALLY_HOME)
+        self.add_agent(ENEMY_HOME)
 
         # Initialize resources
         self.add_agents(initialize_resources())

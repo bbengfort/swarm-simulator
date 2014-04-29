@@ -85,6 +85,12 @@ class Particle(object):
         """
         Called to update the particle at a new timestep.
         """
+        # enemy_team = "enemy" if self.team == "ally" else "ally"
+        # enemy = self.find_nearest(500, 360, team=enemy_team)
+        # if enemy:
+        #     self._vel = Vector.zero()
+        # else:
+
         self.update_velocity()
         self.update_position()
         self.update_state()
@@ -140,27 +146,24 @@ class Particle(object):
         self._loaded = self.loaded
 
         if self.state == SPREADING:
-            mineral = self.find_nearest(200, 360, 'mineral')
-            if mineral:
-                # TODO push memory on stack (for all seen minerals, not just closest)
+            # scan for mineral stashes
+            for mineral in [m for m in self.neighbors(200, 360, team='mineral') if m != self.home and m.stash > 0 and m not in self.memory]:
                 self.memory.append(mineral)
-                self._target = mineral
+
+            if len(self.memory) > 0:
+                self._target = self.memory[-1]
                 self._state  = SEEKING
                 return
 
         if self.state == SEEKING:
-            if self.pos.distance(self.target.relative_pos(self.pos)) < 10:
-                # What to do if nothing remains?
+            if self.pos.distance(self.target.relative_pos(self.pos)) < 30:
                 self._loaded = self.target.mine()
-                if self.loaded:
+                if self._loaded:
                     self._target = self.home
                     self._state  = CARAVAN
                     return
-                elif self.memory:
-                    self._target = self.memory[-1]
-                    self._state  = SEEKING
-                    return
                 else:
+                    self.memory.remove(self._target)
                     self._target = None
                     self._state  = SPREADING
                     return
@@ -310,7 +313,7 @@ class Particle(object):
         """
         r = self.components['cohesion'].radius
         a = self.components['cohesion'].alpha
-        neighbors = list(self.neighbors(r,a, team='ally'))
+        neighbors = list(self.neighbors(r,a, team=self.team))
 
         if not neighbors:
             return Vector.zero()
@@ -328,7 +331,7 @@ class Particle(object):
         """
         r = self.components['alignment'].radius
         a = self.components['alignment'].alpha
-        neighbors = [x for x in list(self.neighbors(r,a, team='ally')) if x.state != CARAVAN]
+        neighbors = [x for x in list(self.neighbors(r,a, team=self.team)) if x.state != CARAVAN]
 
         if not neighbors:
             return Vector.zero()
@@ -354,7 +357,8 @@ class Particle(object):
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
-        target = self.find_nearest(r, a, team='enemy')
+        enemy_team = "enemy" if self.team == "ally" else "ally"
+        target = self.find_nearest(r, a, team=enemy_team)
 
         if not target:
             return Vector.zero()
@@ -373,7 +377,7 @@ class Particle(object):
         """
         r = self.components['separation'].radius
         a = self.components['separation'].alpha
-        neighbors = list(self.neighbors(r,a, team='ally'))
+        neighbors = list(self.neighbors(r,a, team=self.team))
 
         if not neighbors:
             return Vector.zero()
@@ -405,7 +409,7 @@ class Particle(object):
         r = self.components['clearance'].radius
         a = self.components['clearance'].alpha
 
-        neighbors = list(self.neighbors(r,a, team='ally'))
+        neighbors = list(self.neighbors(r,a, team=self.team))
         if neighbors:
             center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
             delta  = center - self.pos

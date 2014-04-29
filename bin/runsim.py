@@ -26,7 +26,7 @@ import argparse
 import cProfile
 
 from swarm import visualize
-from swarm import World, BASE
+from swarm import World, ALLY_HOME
 from swarm.params import parameters
 
 ##########################################################################
@@ -55,7 +55,7 @@ def visual(args):
 
     output = []
     output.append("Ran %i time steps in %0.3f seconds" % (world.time, delta))
-    output.append("Agents successfully collected %i resources" % BASE.stash)
+    output.append("Agents successfully collected %i resources" % ALLY_HOME.stash)
     return "\n".join(output)
 
 def simulate(args):
@@ -80,7 +80,7 @@ def simulate(args):
 
     output = []
     output.append("Ran %i time steps in %0.3f seconds" % (world.time, delta))
-    output.append("Agents successfully collected %i resources" % BASE.stash)
+    output.append("Agents successfully collected %i resources" % ALLY_HOME.stash)
     return "\n".join(output)
 
 def profile(args):
