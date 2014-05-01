@@ -90,18 +90,20 @@ class World(object):
         # Create an empty agents list
         self.agents = []
 
+        # Initialize the allies
+        ally_parameters = AllyParameters.load_file(setting('ally_conf_path'))
+        if 'agents' in kwargs:
+            self.add_agents(kwargs.pop('agents'))
+        else:
+            self.add_agents(initialize_particles(params = ally_parameters))
+            self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
+
         # Initialize the bases
         self.add_agent(ALLY_HOME)
         self.add_agent(ENEMY_HOME)
 
         # Initialize resources
         self.add_agents(initialize_resources())
-
-        # Initialize the teams
-        self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
-
-        ally_parameters = AllyParameters.load_file(kwargs.get('ally_conf_path'))
-        self.add_agents(initialize_particles(params = ally_parameters))
 
     def add_agent(self, agent):
         agent.world = self

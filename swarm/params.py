@@ -106,7 +106,7 @@ class Configuration(object):
                 with open(path, 'r') as conf:
                     config.configure(yaml.load(conf))
         return config
- 
+
     @classmethod
     def load_file(klass, path):
         """
@@ -269,7 +269,7 @@ class SimulationParameters(Configuration):
     debug            = True
     maximum_velocity = 12
     team_size        = 50
-    deposits         = 12
+    deposits         = 5
     stash_size       = 80
     maximum_time     = 40000
     world_size       = 3000
@@ -277,8 +277,8 @@ class SimulationParameters(Configuration):
 
     # Spreading Movement Behavior
     spreading        = MovementBehavior({
-        'avoidance':   VelocityComponent(1, 0.66, 100, 180),
-        'separation':  VelocityComponent(2, 0.83, 150, 180),
+        'avoidance':   VelocityComponent(1, 0.66, 300, 180),
+        'separation':  VelocityComponent(2, 0.83, 150, 360),
         'clearance':   VelocityComponent(3, 0.83, 150, 115),
         'alignment':   VelocityComponent(4, 0.83, 250, 115),
         'cohesion':    VelocityComponent(5, 0.83, 300, 360),

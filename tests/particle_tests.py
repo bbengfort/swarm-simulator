@@ -23,7 +23,7 @@ import numpy as np
 from swarm.particle import *
 from swarm.world import World
 from swarm.vectors import Vector
-from swarm.params import parameters
+from swarm.params import world_parameters as parameters
 from world_tests import NUM_BASES
 
 ##########################################################################
@@ -51,7 +51,7 @@ class ParticleTests(unittest.TestCase):
         """
         Test the neighbors of particle A in a given radius
         """
-        expected = {'a', 'b', 'c', 'd', 'e', 'g', 'ally_home'}
+        expected = {'a', 'b', 'c', 'd', 'e', 'g'}
         for particle in self.particle.neighbors(150, 360):
             self.assertIn(particle.idx, expected)
 
@@ -74,8 +74,8 @@ class ParticleTests(unittest.TestCase):
         Check the radius and alpha component access in spreading state
         """
         components = (
-            ('avoidance',  100, 180),
-            ('separation', 150, 180),
+            ('avoidance',  300, 180),
+            ('separation', 150, 360),
             ('clearance',  150, 115),
             ('alignment',  250, 115),
             ('cohesion',   300, 360),
@@ -83,8 +83,8 @@ class ParticleTests(unittest.TestCase):
 
         for component, radius, alpha in components:
             params = self.particle.components.get(component)
-            self.assertEqual(params.radius, radius, msg="Radius does not match test data, tests will fail!")
-            self.assertEqual(params.alpha,  alpha,  msg="Alpha does not match test data, tests will fail!")
+            self.assertEqual(params.radius, radius, msg="Radius does not match test data for %s, tests will fail!" % component)
+            self.assertEqual(params.alpha,  alpha,  msg="Alpha does not match test data for %s, tests will fail!" % component)
 
     def test_cohesion(self):
         """
@@ -99,7 +99,7 @@ class ParticleTests(unittest.TestCase):
         """
         Test the alignment computation
         """
-        expected = Vector.arr(np.array([ 10.73312629, 5.36656315]))
+        expected = Vector.arr(np.array([ 1.11143669, 0.55571835]))
         velocity = self.particle.alignment()
         msg = "expected vector: %s does not match computed vector: %s" % (expected, velocity)
         self.assertTrue(np.allclose(expected, velocity), msg=msg)
@@ -118,7 +118,7 @@ class ParticleTests(unittest.TestCase):
         """
         Test the separation computation
         """
-        expected = Vector.arr(np.array([-2.42082666, -3.45832379]))
+        expected = Vector.arr(np.array([-3.73398612, -5.43125254]))
         velocity = self.particle.separation()
         msg = "expected vector: %s does not match computed vector: %s" % (expected, velocity)
         self.assertTrue(np.allclose(expected, velocity), msg=msg)
@@ -137,7 +137,7 @@ class ParticleTests(unittest.TestCase):
         """
         Test the clearance computation
         """
-        expected = Vector.arr(np.array([-8.48528137, 8.48528137]))
+        expected = Vector.arr(np.array([ 9.83078305, -6.88154813]))
         velocity = self.particle.clearance()
         msg = "expected vector: %s does not match computed vector: %s" % (expected, velocity)
         self.assertTrue(np.allclose(expected, velocity), msg=msg)

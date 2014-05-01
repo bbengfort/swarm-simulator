@@ -86,7 +86,7 @@ class ParticleTests(unittest.TestCase):
         """
         Assert A can see all in a 360 radius
         """
-        expected = {'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'ally_home'}
+        expected = {'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'}
         observed = set([])
         for neighbor in self.particle.neighbors(300,360):
             observed.add(neighbor.idx)
@@ -96,7 +96,7 @@ class ParticleTests(unittest.TestCase):
         """
         Assert A can see half in a 180 radius
         """
-        expected = {'c', 'e', 'g', 'h', 'i', 'ally_home'}
+        expected = {'c', 'e', 'g', 'h', 'i'}
         observed = set([])
         for neighbor in self.particle.neighbors(300,180):
             observed.add(neighbor.idx)
@@ -106,7 +106,7 @@ class ParticleTests(unittest.TestCase):
         """
         Assert A can only see in front 90
         """
-        expected = {'c', 'ally_home'}
+        expected = {'c'}
         observed = set([])
         for neighbor in self.particle.neighbors(300,90):
             observed.add(neighbor.idx)

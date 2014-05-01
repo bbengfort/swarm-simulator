@@ -27,6 +27,7 @@ import cProfile
 
 from swarm import visualize
 from swarm import World, ALLY_HOME
+from swarm.exceptions import SimulationException
 
 ##########################################################################
 ## Command Line Variables
@@ -134,11 +135,11 @@ def main(*argv):
 
     # Handle input from the command line
     args = parser.parse_args()            # Parse the arguments
-    #try:
-    msg = args.func(args)             # Call the default function
-    parser.exit(0, msg+"\n")          # Exit clearnly with message
-    #except Exception as e:
-        #parser.error(str(e)+"\n")          # Exit with error
+    try:
+        msg = args.func(args)             # Call the default function
+        parser.exit(0, msg+"\n")          # Exit clearnly with message
+    except SimulationException as e:
+        parser.error(str(e)+"\n")          # Exit with error
 
 if __name__ == '__main__':
     main(*sys.argv)

@@ -20,13 +20,13 @@ Integration testing for the simulated world
 import unittest
 
 from swarm.world import *
-from swarm.params import parameters
+from swarm.params import world_parameters as parameters
 
 ##########################################################################
 ## World Test Case
 ##########################################################################
 
-NUM_BASES = 1
+NUM_BASES = 2
 
 class WorldTests(unittest.TestCase):
 
@@ -36,7 +36,7 @@ class WorldTests(unittest.TestCase):
         """
         world = World()
 
-        expected = parameters.get('team_size') + parameters.get('deposits') + NUM_BASES
+        expected = (2 * parameters.get('team_size')) + parameters.get('deposits') + NUM_BASES
         self.assertEqual(len(world.agents), expected)
 
     def test_agents_init(self):
@@ -51,11 +51,11 @@ class WorldTests(unittest.TestCase):
 
     def test_resources_init(self):
         """
-        Check that the world is initialized with a population
+        Check that the world is initialized with resources
         """
         world = World()
 
-        expected = parameters.get('deposits')
+        expected = parameters.get('deposits') + NUM_BASES
         observed = [agent for agent in world.agents if agent.team == 'mineral']
         self.assertEqual(len(observed), expected)
 
