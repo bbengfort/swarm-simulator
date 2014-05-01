@@ -387,12 +387,9 @@ class Particle(object):
 
     def avoidance(self):
         """
-        Reports the avoidance velocity from an array of neighbors
+        Reports the avoidance velocity from an array of agents on the opposing team.
 
-        Target should be the closest enemy agent. See the following:
-        nearest, _ = self.find_nearest(neighbors)
-
-        Changed the formula to (r-dp.length /r)**2
+        Changed the formula to (r - dp.length /r)
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
@@ -403,7 +400,7 @@ class Particle(object):
 
         for n in neighbors:
             delta = self.pos - n.relative_pos(self.pos)
-            scale = ((r - delta.length) / r)**2
+            scale = (r - delta.length) / r
             arr += scale * delta.unit * VMAX
 
         return Vector.arr(arr)
