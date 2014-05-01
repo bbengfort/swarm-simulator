@@ -17,6 +17,7 @@ Vector helper methods for use in sarsim
 ## Imports
 ##########################################################################
 
+import math
 import numpy as np
 
 ##########################################################################
@@ -96,8 +97,16 @@ class Vector(np.ndarray):
         Compute the length of the vector
         """
         if not hasattr(self, '_length'):
-            self._length = np.linalg.norm(self)
+            self._length = math.sqrt(self.length2)
+
         return self._length
+
+    @property
+    def length2(self):
+        """
+        Compute the squared length of the vector
+        """
+        return self.x*self.x + self.y*self.y
 
     @property
     def orthogonal(self):
@@ -135,6 +144,12 @@ class Vector(np.ndarray):
         Compute the Euclidean distance between two vectors
         """
         return np.linalg.norm(self-other)
+
+    def distance2(self, other):
+        """
+        Compute the squared Euclidean distance between two vectors
+        """
+        return (self.x-other.x)**2 + (self.y-other.y)**2
 
     def copy(self):
         """
