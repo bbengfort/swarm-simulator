@@ -31,6 +31,7 @@ SPREADING = "spreading"
 SEEKING   = "seeking"
 CARAVAN   = "caravan"
 GUARDING  = "guarding"
+STUNNED   = "stunned"
 
 ## Maximum Velocity
 VMAX      = parameters.get('maximum_velocity')
@@ -51,6 +52,8 @@ class Particle(object):
         to identify the particle) and the world it belongs to, so that it
         can be bound to discover its own neighborhood.
         """
+        self.parameters = kwargs.get('parameters', parameters)
+
         self.pos    = Vector.arr(position)           # Init vectors here?
         self.vel    = Vector.arr(velocity)           # Init vectors here?
         self.idx    = identifier
@@ -61,6 +64,9 @@ class Particle(object):
         self.memory = []                             # Initialize the memory
         self.target = None                           # Initialize target
         self.loaded = False                          # Are we carrying minerals or not?
+        self.enemy  = "enemy" if self.team == "ally" else ("ally" if self.team == "enemy" else None)
+        self.stun_cooldown = 0
+        self.guard_threshold = parameters.guard_threshold
 
         # Hidden variables to reduce computation complexity
         self._pos    = None                          # Holder for new position
@@ -85,11 +91,6 @@ class Particle(object):
         """
         Called to update the particle at a new timestep.
         """
-        # enemy_team = "enemy" if self.team == "ally" else "ally"
-        # enemy = self.find_nearest(500, 360, team=enemy_team)
-        # if enemy:
-        #     self._vel = Vector.zero()
-        # else:
 
         self.update_velocity()
         self.update_position()
@@ -100,6 +101,11 @@ class Particle(object):
         Adds the velocity to get a new position, also ensures a periodic
         world by using modulo against the width and height of the world.
         """
+
+        if self.state == STUNNED:
+            self._pos = self.pos
+            return
+
         newpos = self.pos + self._vel
         x = newpos.x % self.world.size[0]
         y = newpos.y % self.world.size[1]
@@ -110,6 +116,11 @@ class Particle(object):
         Instead of starting with velocity zero as in the ARod paper, we
         implement 'inertia' by using the old velocity.
         """
+
+        if self.state == STUNNED:
+            self._vel = self.vel
+            return
+
         vectors = []    # Tuples of vector components and their priority
         for component, parameters in self.components.items():
             # Get the method by name and compute
@@ -118,9 +129,6 @@ class Particle(object):
                 vectors.append((component, velocity(), parameters))
             else:
                 raise Exception("No method on %r, '%s'" % (self, component))
-
-        # Sort the vectors by priority
-        # vectors = sorted(vectors, key=lambda vp: vp[2].priority)
 
         newvel = self.vel
         for comp, vec, params in vectors:
@@ -145,6 +153,20 @@ class Particle(object):
         self._target = self.target
         self._loaded = self.loaded
 
+        if self.state != STUNNED:
+            enemy = self.find_nearest(30, 360, team=self.enemy, except_state=STUNNED)
+            if enemy:
+                self._state = STUNNED
+                angle = (enemy.pos - self.pos).angle(self.vel)
+                self.stun_cooldown = (180 - angle) / 1
+                return
+
+        if self.state == STUNNED:
+            self.stun_cooldown -= 1
+            if self.stun_cooldown <= 0:
+                self._state = CARAVAN if self.loaded else SPREADING
+                return
+
         if self.state == SPREADING:
             # scan for mineral stashes
             for mineral in [m for m in self.neighbors(200, 360, team='mineral') if m != self.home and m.stash > 0 and m not in self.memory]:
@@ -157,11 +179,16 @@ class Particle(object):
 
         if self.state == SEEKING:
             if self.pos.distance(self.target.relative_pos(self.pos)) < 30:
-                self._loaded = self.target.mine()
-                if self._loaded:
-                    self._target = self.home
-                    self._state  = CARAVAN
-                    return
+                if self.target.stash > 0:
+                    if self.target.idx != (self.enemy + '_home') and \
+                            len([n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]) < self.guard_threshold:
+                        self._state = GUARDING
+                        return
+                    else:
+                        self._loaded = self.target.mine()
+                        self._target = self.home
+                        self._state  = CARAVAN
+                        return
                 else:
                     self.memory.remove(self._target)
                     self._target = None
@@ -172,14 +199,25 @@ class Particle(object):
             if self.pos.distance(self.target.relative_pos(self.pos)) < 10:
                 self.target.drop()
                 self._loaded = False
-                if self.memory:
-                    self._target = self.memory[-1]
-                    self._state  = SEEKING
+
+                guards = [n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]
+                if len(guards) < self.guard_threshold:
+                    self._state = GUARDING
                     return
                 else:
-                    self._target = None
-                    self._state  = SPREADING
-                    return
+                    if self.memory:
+                        self._target = self.memory[-1]
+                        self._state  = SEEKING
+                        return
+                    else:
+                        self._target = None
+                        self._state  = SPREADING
+                        return
+
+        if self.state == GUARDING:
+            if self.target.stash <= 0:
+                self._state = SPREADING
+                return
 
     def blit(self):
         """
@@ -223,7 +261,7 @@ class Particle(object):
         """
         Get movement behaviors components based on state
         """
-        _behavior = parameters.get(self.state)
+        _behavior = self.parameters.get(self.state)
         if _behavior is None:
             raise ImproperlyConfigured("No movement behaviors for state '%s'." % self.state)
         return _behavior.components
@@ -290,7 +328,7 @@ class Particle(object):
                 yield agent
                 continue
 
-    def find_nearest(self, radius, alpha, team="any"):
+    def find_nearest(self, radius, alpha, team="any", except_state="foo"):
         """
         Finds the nearest point from the neighbors
         """
@@ -298,7 +336,7 @@ class Particle(object):
         distance = None
         for neighbor in self.neighbors(radius, alpha, team):
             d = self.pos.distance(neighbor.relative_pos(self.pos))
-            if distance is None or d < distance:
+            if (distance is None or d < distance) and neighbor.state != except_state:
                 distance = d
                 nearest  = neighbor
         return nearest
@@ -313,7 +351,7 @@ class Particle(object):
         """
         r = self.components['cohesion'].radius
         a = self.components['cohesion'].alpha
-        neighbors = list(self.neighbors(r,a, team=self.team))
+        neighbors = [n for n in self.neighbors(r,a, team=self.team) if (n.state != GUARDING and n.state != STUNNED)]
 
         if not neighbors:
             return Vector.zero()
@@ -331,7 +369,7 @@ class Particle(object):
         """
         r = self.components['alignment'].radius
         a = self.components['alignment'].alpha
-        neighbors = [x for x in list(self.neighbors(r,a, team=self.team)) if x.state != CARAVAN]
+        neighbors = [x for x in list(self.neighbors(r,a, team=self.team)) if (x.state == SEEKING or x.state == SPREADING)]
 
         if not neighbors:
             return Vector.zero()
@@ -357,8 +395,7 @@ class Particle(object):
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
-        enemy_team = "enemy" if self.team == "ally" else "ally"
-        target = self.find_nearest(r, a, team=enemy_team)
+        target = self.find_nearest(r, a, team=self.enemy)
 
         if not target:
             return Vector.zero()
@@ -409,7 +446,7 @@ class Particle(object):
         r = self.components['clearance'].radius
         a = self.components['clearance'].alpha
 
-        neighbors = list(self.neighbors(r,a, team=self.team))
+        neighbors = list(n for n in self.neighbors(r,a, team=self.team) if n.state != GUARDING)
         if neighbors:
             center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
             delta  = center - self.pos
@@ -424,6 +461,13 @@ class Particle(object):
         """
         if not hasattr(self, 'target') or self.target is None:
             raise Exception("In Homing, the particle must have a target")
+
+        direction = self.target.relative_pos(self.pos) - self.pos
+        return VMAX * (direction.unit)
+
+    def mineral_cohesion(self):
+        if not hasattr(self, 'target') or self.target is None:
+            raise Exception("In Mineral_Cohesion, the particle must have a target")
 
         direction = self.target.relative_pos(self.pos) - self.pos
         return VMAX * (direction.unit)

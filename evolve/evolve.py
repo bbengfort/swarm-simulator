@@ -1,7 +1,7 @@
 POPSIZE = 50
-MAXGENS = 100
+MAXGENS = 999
 TOURNEY_SIZE = 3
-P_MUT = 0.1
+P_MUT = 0.2
 MUT_WEIGHT = 0.2
 MUT_RADIUS = 20
 MUT_ALPHA = 20
@@ -64,6 +64,10 @@ class Evolver(object):
         # Mutate (the elite carry-forward is exempt)
         for i in range(1, POPSIZE):
             config = next_gen[i][0]
+
+            if (random.random() < P_MUT):
+                config.guard_threshold = min(10, max(0, config.guard_threshold + (1 if random.random() < 0.5 else -1)))
+
             for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
                 for k, v in state.components.iteritems():
                     if (random.random() < P_MUT):

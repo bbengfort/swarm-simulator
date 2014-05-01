@@ -26,7 +26,7 @@ from circle import circular_distribute
 ## Helper functions
 ##########################################################################
 
-# The team for home needs to be mineral for competative...
+# The team for home needs to be mineral for competitive...
 ALLY_HOME = ResourceParticle(Vector.arrp(750,750), identifier="ally_home", stash_size=0)
 ENEMY_HOME = ResourceParticle(Vector.arrp(2250,2250), identifier="enemy_home", stash_size=0)
 
@@ -46,6 +46,7 @@ def initialize_particles(**kwargs):
     team   = kwargs.get('team', 'ally')
     maxvel = kwargs.get('maximum_velocity', parameters.get('maximum_velocity'))
     home   = kwargs.get('home', ALLY_HOME)
+    params = kwargs.get('params', parameters)
 
     # Generate coordinates and particles
     coords = zip(*circular_distribute(num=number, center=center, r=radius))

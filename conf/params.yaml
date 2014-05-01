@@ -5,13 +5,14 @@
 
 ## System configuration
 
-debug: false             # Are we in DEBUG mode?
+debug: false            # Are we in DEBUG mode?
 maximum_velocity: 12    # What is the maximum velocity of any node?
 team_size: 10           # How many agents in each team?
 deposits: 12            # How many resource deposits?
 stash_size: 80          # Resources per deposit
 maximum_time: 40000     # End of time?
 world_size: 3000        # Size of the square world
+guard_threshold: 2      # How many guards on a deposit is sufficient?
 
 ## Movement Behaviors
 ## Each movement behavior is defined seperately
