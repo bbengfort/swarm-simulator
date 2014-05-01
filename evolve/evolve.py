@@ -67,7 +67,10 @@ class Evolver(object):
             config = next_gen[i][0]
 
             if (random.random() < P_MUT):
-                config.guard_threshold = min(5, max(0, config.guard_threshold + (1 if random.random() < 0.5 else -1)))
+                config.home_guard_threshold = min(5, max(0, config.home_guard_threshold + (1 if random.random() < 0.5 else -1)))
+
+            if (random.random() < P_MUT):
+                config.depo_guard_threshold = min(5, max(0, config.depo_guard_threshold + (1 if random.random() < 0.5 else -1)))
 
             for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
                 for k, v in state.components.iteritems():

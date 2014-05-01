@@ -12,7 +12,8 @@ deposits: 5             # How many resource deposits?
 stash_size: 80          # Resources per deposit
 maximum_time: 40000     # End of time?
 world_size: 3000        # Size of the square world
-guard_threshold: 1      # How many guards on a deposit is sufficient?
+home_guard_threshold: 1 # How many guards at home is sufficient?
+depo_guard_threshold: 0 # How many guards on a deposit is sufficient?
 ally_conf_path: conf/params.yaml
 
 ## Movement Behaviors

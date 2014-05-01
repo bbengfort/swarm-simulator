@@ -181,7 +181,7 @@ class Particle(object):
             if self.pos.distance(self.target.relative_pos(self.pos)) < 30:
                 if self.target.stash > 0:
                     if self.target.idx != (self.enemy + '_home') and \
-                            len([n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]) < self.params.guard_threshold:
+                            len([n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING or n._state == GUARDING]) < self.params.depo_guard_threshold:
                         self._state = GUARDING
                         return
                     else:
@@ -200,8 +200,8 @@ class Particle(object):
                 self.target.drop()
                 self._loaded = False
 
-                guards = [n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]
-                if len(guards) < self.params.guard_threshold:
+                guards = [n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING or n._state == GUARDING]
+                if len(guards) < self.params.home_guard_threshold:
                     self._state = GUARDING
                     return
                 else:

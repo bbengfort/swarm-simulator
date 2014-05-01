@@ -273,7 +273,8 @@ class SimulationParameters(Configuration):
     stash_size       = 80
     maximum_time     = 40000
     world_size       = 3000
-    guard_threshold  = 0
+    home_guard_threshold  = 1
+    depo_guard_threshold  = 0
 
     # Spreading Movement Behavior
     spreading        = MovementBehavior({
@@ -327,7 +328,8 @@ class AllyParameters(Configuration):
     """
     This object contains the default parameters for the simulation.
     """
-    guard_threshold  = 0
+    home_guard_threshold  = 1
+    depo_guard_threshold  = 0
 
     # Spreading Movement Behavior
     spreading        = MovementBehavior({
