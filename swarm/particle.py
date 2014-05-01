@@ -18,7 +18,7 @@ A Particle class for local behaviors
 ##########################################################################
 
 import numpy as np
-from params import parameters
+from params import *
 from exceptions import *
 from vectors import Vector
 
@@ -34,7 +34,7 @@ GUARDING  = "guarding"
 STUNNED   = "stunned"
 
 ## Maximum Velocity
-VMAX      = parameters.get('maximum_velocity')
+VMAX      = world_parameters.get('maximum_velocity')
 
 ##########################################################################
 ## Particle Object
@@ -49,7 +49,7 @@ class Particle(object):
         to identify the particle) and the world it belongs to, so that it
         can be bound to discover its own neighborhood.
         """
-        self.parameters = kwargs.get('parameters', parameters)
+        self.params = kwargs.get('params', world_parameters)
 
         self.pos    = Vector.arr(position)           # Init vectors here?
         self.vel    = Vector.arr(velocity)           # Init vectors here?
@@ -63,7 +63,6 @@ class Particle(object):
         self.loaded = False                          # Are we carrying minerals or not?
         self.enemy  = "enemy" if self.team == "ally" else ("ally" if self.team == "enemy" else None)
         self.stun_cooldown = 0
-        self.guard_threshold = self.parameters.guard_threshold
 
         # Hidden variables to reduce computation complexity
         self._pos    = None                          # Holder for new position
@@ -161,7 +160,10 @@ class Particle(object):
         if self.state == STUNNED:
             self.stun_cooldown -= 1
             if self.stun_cooldown <= 0:
-                self._state = CARAVAN if self.loaded else SPREADING
+                if self.target == self.home:
+                    self._state = CARAVAN if self.loaded else GUARDING
+                else:
+                    self._state = SPREADING
                 return
 
         if self.state == SPREADING:
@@ -178,7 +180,7 @@ class Particle(object):
             if self.pos.distance(self.target.relative_pos(self.pos)) < 30:
                 if self.target.stash > 0:
                     if self.target.idx != (self.enemy + '_home') and \
-                            len([n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]) < self.guard_threshold:
+                            len([n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]) < self.params.guard_threshold:
                         self._state = GUARDING
                         return
                     else:
@@ -198,7 +200,7 @@ class Particle(object):
                 self._loaded = False
 
                 guards = [n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING]
-                if len(guards) < self.guard_threshold:
+                if len(guards) < self.params.guard_threshold:
                     self._state = GUARDING
                     return
                 else:
@@ -220,7 +222,7 @@ class Particle(object):
         """
         Swap new pos/vel for old ones.
         """
-        if parameters.debug:
+        if world_parameters.debug:
             print "Particle %s" % self.idx
             print "Position: %s --> %s" % (self.pos, self._pos)
             print "Velocity: %s --> %s" % (self.vel, self._vel)
@@ -258,7 +260,7 @@ class Particle(object):
         """
         Get movement behaviors components based on state
         """
-        _behavior = self.parameters.get(self.state)
+        _behavior = self.params.get(self.state)
         if _behavior is None:
             raise ImproperlyConfigured("No movement behaviors for state '%s'." % self.state)
         return _behavior.components
@@ -308,7 +310,7 @@ class Particle(object):
             raise Exception("Can only find neighbors for bound particles.")
 
         if source=='internal' and self._neighbors is None:
-            self._neighbors = list(self.neighbors(self.parameters.max_radius, 360, team='any', source='world'))
+            self._neighbors = list(self.neighbors(self.params.max_radius, 360, team='any', source='world'))
 
         source = self._neighbors if source == 'internal' else self.world.agents
         nearby = lambda pos: self.in_sight(pos, radius, alpha)
@@ -376,7 +378,6 @@ class Particle(object):
         scale  = (deltap.length / r) ** 2
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
-        #deltav = avgvel - self.vel
         deltav = Vector.arr(avgvel)
 
         return VMAX * deltav.unit * scale
@@ -392,16 +393,17 @@ class Particle(object):
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
-        target = self.find_nearest(r, a, team=self.enemy, except_state=STUNNED)
 
-        if not target:
-            return Vector.zero()
+        neighbors = [x for x in list(self.neighbors(r,a, team=self.enemy)) if x.state != STUNNED]
 
-        delta  = target.pos - self.pos
-        scale  = ((r - delta.length) / r) ** 2
-        vmaxrt = VMAX * (delta / delta.length)
+        vec = Vector.zero()
 
-        return -1 * vmaxrt * scale
+        for n in neighbors:
+            delta = self.pos - n.relative_pos(self.pos)
+            scale = (r - delta.length) / r
+            vec = vec + scale * delta.unit * VMAX
+
+        return vec
 
     def separation(self):
         """
@@ -443,7 +445,7 @@ class Particle(object):
         r = self.components['clearance'].radius
         a = self.components['clearance'].alpha
 
-        neighbors = list(n for n in self.neighbors(r,a, team=self.team) if n.state != GUARDING)
+        neighbors = list(n for n in self.neighbors(r,a, team=self.team) if (n.state != GUARDING and n.state != STUNNED))
         if neighbors:
             center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
             delta  = center - self.pos
@@ -477,7 +479,7 @@ class ResourceParticle(Particle):
 
     def __init__(self, pos, **kwargs):
         # Create the stash that the minerals contain
-        self.stash = kwargs.get('stash_size', parameters.get('stash_size'))
+        self.stash = kwargs.get('stash_size', world_parameters.get('stash_size'))
 
         # Pass everything else back to super
         kwargs['team'] = kwargs.get('team', 'mineral')  # Add the default team
@@ -514,10 +516,10 @@ class ResourceParticle(Particle):
 
 if __name__ == '__main__':
 
-    from params import parameters
+    from params import *
     from world import SimulatedWorld
 
-    debug = parameters.get('debug', True)
+    debug = world_parameters.get('debug', True)
     world = SimulatedWorld()
 
     def update(iterations=1):

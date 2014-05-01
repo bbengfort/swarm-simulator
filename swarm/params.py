@@ -120,7 +120,9 @@ class Configuration(object):
 
     def dump_file(self, path):
         file = open(path, 'w')
-        yaml.dump(dict(self.options()), file, default_flow_style=False)
+        d = dict(self.options())
+        del d['max_radius']
+        yaml.dump(d, file, default_flow_style=False)
         file.close()
 
         # kludgy way of removing the type tags
@@ -321,11 +323,66 @@ class SimulationParameters(Configuration):
                         self._max_radius = component.radius
         return self._max_radius
 
+class AllyParameters(Configuration):
+    """
+    This object contains the default parameters for the simulation.
+    """
+    guard_threshold  = 0
+
+    # Spreading Movement Behavior
+    spreading        = MovementBehavior({
+        'avoidance':   VelocityComponent(1, 0.66, 100, 180),
+        'separation':  VelocityComponent(2, 0.83, 150, 180),
+        'clearance':   VelocityComponent(3, 0.83, 150, 115),
+        'alignment':   VelocityComponent(4, 0.83, 250, 115),
+        'cohesion':    VelocityComponent(5, 0.83, 300, 360),
+    })
+
+    # Seeking Movement Behavior
+    seeking          = MovementBehavior({
+        'avoidance':   VelocityComponent(1, 0.83, 100, 180),
+        'seeking':     VelocityComponent(2, 0.66, 250, 360),
+        'separation':  VelocityComponent(3, 0.25, 50, 90),
+    })
+
+    # Caravan Movement Behavior
+    caravan          = MovementBehavior({
+        'avoidance':   VelocityComponent(1, 0.83, 100, 180),
+        'homing':      VelocityComponent(2, 0.83, None, None),
+        'separation':  VelocityComponent(3, 0.83, 100, 180),
+        'clearance':   VelocityComponent(4, 0.83, 150, 60),
+    })
+
+    # Guarding Movement Behavior
+    guarding         = MovementBehavior({
+        'avoidance':   VelocityComponent(1, 1.0, 100, 180),
+        'separation':  VelocityComponent(2, 0.62, 50, 180),
+        'mineral_cohesion': VelocityComponent(3, 0.62, 150, 360),
+    })
+
+    @property
+    def max_radius(self):
+        """
+        Reports the maximum radius of all the movement behaviors.
+        This is used to optimize neighborhood searching on the particles.
+        """
+        if not hasattr(self, '_max_radius'):
+            # Make sure to update this list!
+            behaviors = (self.spreading, self.seeking, self.caravan, self.guarding)
+            self._max_radius = None
+            for behavior in behaviors:
+                for component in behavior.components.values():
+                    if self._max_radius is None or component.radius > self._max_radius:
+                        if isinstance(component.radius, str): continue
+                        self._max_radius = component.radius
+        return self._max_radius
+
 ##########################################################################
 ## Import this loaded Configuration
 ##########################################################################
 
-parameters = SimulationParameters.load()
+world_parameters = SimulationParameters.load()
+ally_parameters = AllyParameters.load()
 
 if __name__ == '__main__':
-    print parameters
+    print world_parameters

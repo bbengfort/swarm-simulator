@@ -40,13 +40,13 @@ def initialize_particles(**kwargs):
 
     # Initialize variables needed to do initialization
     klass  = kwargs.get('type', Particle)
-    number = kwargs.get('number', parameters.get('team_size'))
+    number = kwargs.get('number', world_parameters.get('team_size'))
     center = kwargs.get('center', (750,750))
     radius = kwargs.get('radius', 100)
     team   = kwargs.get('team', 'ally')
-    maxvel = kwargs.get('maximum_velocity', parameters.get('maximum_velocity'))
+    maxvel = kwargs.get('maximum_velocity', world_parameters.get('maximum_velocity'))
     home   = kwargs.get('home', ALLY_HOME)
-    params = kwargs.get('params', parameters)
+    params = kwargs.get('params', world_parameters)
 
     # Generate coordinates and particles
     coords = zip(*circular_distribute(num=number, center=center, r=radius))
@@ -54,7 +54,7 @@ def initialize_particles(**kwargs):
         position = Vector.arrp(*coord)
         velocity = Vector.rand(maxvel) if maxvel > 0 else Vector.zero()
         name     = team + "%02i" % (idx+1)
-        yield klass(position, velocity, name, team=team, home=home, parameters=params)
+        yield klass(position, velocity, name, team=team, home=home, params=params)
 
 def initialize_resources(**kwargs):
     """
@@ -78,7 +78,7 @@ class World(object):
 
     def __init__(self, **kwargs):
         # Helper function for accessing kwargs and parameters
-        setting = lambda name: kwargs.pop(name, parameters.get(name))
+        setting = lambda name: kwargs.pop(name, world_parameters.get(name))
 
         # Initialize parameters from settings
         world_size = setting('world_size')
@@ -100,10 +100,8 @@ class World(object):
         # Initialize the teams
         self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
 
-        # TODO: FIX THIS! Loading the parameters here will overwrite the parameters of all the enemy agents.
-        # Could this be because the Configuration class we're using is based on class (instead of instance) fields?
-        friendly_params = SimulationParameters.load_file(kwargs.get('ally_conf_path'))
-        self.add_agents(initialize_particles(params = friendly_params))
+        ally_parameters = AllyParameters.load_file(kwargs.get('ally_conf_path'))
+        self.add_agents(initialize_particles(params = ally_parameters))
 
     def add_agent(self, agent):
         agent.world = self

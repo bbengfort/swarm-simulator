@@ -27,7 +27,6 @@ import cProfile
 
 from swarm import visualize
 from swarm import World, ALLY_HOME
-from swarm.params import parameters
 
 ##########################################################################
 ## Command Line Variables

@@ -22,8 +22,8 @@ spreading:
     components:
         avoidance:
             priority: 1
-            weight: 0.66
-            radius: 100
+            weight: 1.0
+            radius: 300
             alpha: 180
         separation:
             priority: 2

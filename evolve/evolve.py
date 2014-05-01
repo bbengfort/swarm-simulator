@@ -20,7 +20,7 @@ class Evolver(object):
     @classmethod
     def random_pop(klass, dir_path = "."):
         for i in range(POPSIZE):
-            config = SimulationParameters()
+            config = AllyParameters()
             for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
                 for k, v in state.components.iteritems():
                     v.weight = round(random.random(), 3)
@@ -42,7 +42,7 @@ class Evolver(object):
 
         for i in range(POPSIZE):
             path = dir_path + "/%s_%s" % (str(generation).zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len))
-            config = SimulationParameters.load_file(path + ".yaml")
+            config = AllyParameters.load_file(path + ".yaml")
             fitness = int(open(path + ".fit", 'r').readline())
             curr_gen.append((config, fitness))
 
