@@ -7,6 +7,7 @@ MUT_RADIUS = 20
 MUT_ALPHA = 20
 
 import random
+import copy
 from swarm.params import *
 
 class Evolver(object):
@@ -59,14 +60,14 @@ class Evolver(object):
         while len(next_gen)< POPSIZE:
             tourney = [random.choice(curr_gen) for i in range(TOURNEY_SIZE)];
             tourney = sorted(tourney, key=lambda x: x[1], reverse = True)
-            next_gen.append(tourney[0])
+            next_gen.append(copy.deepcopy(tourney[0]))
         
         # Mutate (the elite carry-forward is exempt)
         for i in range(1, POPSIZE):
             config = next_gen[i][0]
 
             if (random.random() < P_MUT):
-                config.guard_threshold = min(10, max(0, config.guard_threshold + (1 if random.random() < 0.5 else -1)))
+                config.guard_threshold = min(5, max(0, config.guard_threshold + (1 if random.random() < 0.5 else -1)))
 
             for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
                 for k, v in state.components.iteritems():
@@ -84,7 +85,7 @@ class Evolver(object):
             next_gen[i][0].dump_file(path)
 
 if __name__ == '__main__':
-    #Evolver.random_pop()
-    #Evolver.random_fit()
-    #Evolver.evolve(0)
+    Evolver.random_pop()
+    # Evolver.random_fit()
+    # Evolver.evolve(0)
     print ""

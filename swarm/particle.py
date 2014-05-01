@@ -36,9 +36,6 @@ STUNNED   = "stunned"
 ## Maximum Velocity
 VMAX      = parameters.get('maximum_velocity')
 
-## Maximum Search Radius (used to boost performance of neighborhood search)
-RMAX      = parameters.max_radius
-
 ##########################################################################
 ## Particle Object
 ##########################################################################
@@ -66,7 +63,7 @@ class Particle(object):
         self.loaded = False                          # Are we carrying minerals or not?
         self.enemy  = "enemy" if self.team == "ally" else ("ally" if self.team == "enemy" else None)
         self.stun_cooldown = 0
-        self.guard_threshold = parameters.guard_threshold
+        self.guard_threshold = self.parameters.guard_threshold
 
         # Hidden variables to reduce computation complexity
         self._pos    = None                          # Holder for new position
@@ -311,7 +308,7 @@ class Particle(object):
             raise Exception("Can only find neighbors for bound particles.")
 
         if source=='internal' and self._neighbors is None:
-            self._neighbors = list(self.neighbors(RMAX, 360, team='any', source='world'))
+            self._neighbors = list(self.neighbors(self.parameters.max_radius, 360, team='any', source='world'))
 
         source = self._neighbors if source == 'internal' else self.world.agents
         nearby = lambda pos: self.in_sight(pos, radius, alpha)
@@ -395,7 +392,7 @@ class Particle(object):
         """
         r = self.components['avoidance'].radius
         a = self.components['avoidance'].alpha
-        target = self.find_nearest(r, a, team=self.enemy)
+        target = self.find_nearest(r, a, team=self.enemy, except_state=STUNNED)
 
         if not target:
             return Vector.zero()

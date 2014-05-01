@@ -46,7 +46,7 @@ def visual(args):
     Run the visual/PyGame version of the simulation
     """
     start = time.time()
-    world = World()
+    world = World(ally_conf_path=args.conf_path)
     size  = args.screen_size
     fps   = args.fps
     visualize(world, [size, size], fps)
@@ -63,7 +63,7 @@ def simulate(args):
     Run a headless simulation with configuration file
     """
     start = time.time()
-    world = World()
+    world = World(ally_conf_path=args.conf_path)
 
     print "Starting headless simulation, use CTRL+C to quit."
     while world.time < world.iterations:
@@ -115,10 +115,12 @@ def main(*argv):
     visual_parser.add_argument('-s', '--screen-size', metavar='SIZE', type=int, dest='screen_size',
                                default=720, help='size of window to run in.')
     visual_parser.add_argument('-f', '--fps', type=int, default=30, help='frames per second to run simulation in.')
+    visual_parser.add_argument('-c', '--conf-path', type=str, dest='conf_path', default='./conf/params.yaml', help='path to ally configuration file.')
     visual_parser.set_defaults(func=visual)
 
     # parser headless simulation
     headless_parser = subparsers.add_parser('simulate', help='Run a headless simulation with the configuration file')
+    headless_parser.add_argument('-c', '--conf-path', type=str, dest='conf_path', default='./conf/params.yaml', help='path to ally configuration file.')
     headless_parser.set_defaults(func=simulate)
 
     # parser for profiling

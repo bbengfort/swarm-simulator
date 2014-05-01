@@ -19,7 +19,7 @@ Contains the mechanics and behavior of the world
 
 from particle import *
 from vectors import Vector
-from params import parameters
+from params import *
 from circle import circular_distribute
 
 ##########################################################################
@@ -54,7 +54,7 @@ def initialize_particles(**kwargs):
         position = Vector.arrp(*coord)
         velocity = Vector.rand(maxvel) if maxvel > 0 else Vector.zero()
         name     = team + "%02i" % (idx+1)
-        yield klass(position, velocity, name, team=team, home=home)
+        yield klass(position, velocity, name, team=team, home=home, parameters=params)
 
 def initialize_resources(**kwargs):
     """
@@ -90,20 +90,20 @@ class World(object):
         # Create an empty agents list
         self.agents = []
 
-        # Initialize the teams
-        if 'agents' in kwargs:
-            self.add_agents(kwargs['agents'])
-        else:
-            self.add_agents(initialize_particles())
-
-        self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
-
         # Initialize the bases
         self.add_agent(ALLY_HOME)
         self.add_agent(ENEMY_HOME)
 
         # Initialize resources
         self.add_agents(initialize_resources())
+
+        # Initialize the teams
+        self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
+
+        # TODO: FIX THIS! Loading the parameters here will overwrite the parameters of all the enemy agents.
+        # Could this be because the Configuration class we're using is based on class (instead of instance) fields?
+        friendly_params = SimulationParameters.load_file(kwargs.get('ally_conf_path'))
+        self.add_agents(initialize_particles(params = friendly_params))
 
     def add_agent(self, agent):
         agent.world = self

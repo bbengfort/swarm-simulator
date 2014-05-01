@@ -96,7 +96,7 @@ class Configuration(object):
     @classmethod
     def load(klass):
         """
-        Insantiates the configuration by attempting to load the
+        Instantiates the configuration by attempting to load the
         configuration from YAML files specified by the CONF_PATH module
         variable. This should be the main entry point for configuration.
         """
@@ -271,6 +271,7 @@ class SimulationParameters(Configuration):
     stash_size       = 80
     maximum_time     = 40000
     world_size       = 3000
+    guard_threshold  = 0
 
     # Spreading Movement Behavior
     spreading        = MovementBehavior({
@@ -319,7 +320,6 @@ class SimulationParameters(Configuration):
                         if isinstance(component.radius, str): continue
                         self._max_radius = component.radius
         return self._max_radius
-
 
 ##########################################################################
 ## Import this loaded Configuration
