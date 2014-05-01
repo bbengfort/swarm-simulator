@@ -20,7 +20,7 @@ Contains the mechanics and behavior of the world
 from particle import *
 from vectors import Vector
 from params import *
-from circle import circular_distribute
+from distribute import circular_distribute, linear_distribute
 
 ##########################################################################
 ## Helper functions
@@ -58,14 +58,22 @@ def initialize_particles(**kwargs):
 
 def initialize_resources(**kwargs):
     """
+    Initialize N particles in a linear distribution along a line with a
+    slope and an intercept. N=number. Keyword arguments include the slope,
+    the intercept, and the length of the line to distribute along.
     """
 
+    # Initialize variables needed to do initialization
     klass  = kwargs.get('type', ResourceParticle)
-    yield klass(Vector.arrp( 500, 2500), identifier="mineral01")
-    yield klass(Vector.arrp(1000, 2000), identifier="mineral02")
-    yield klass(Vector.arrp(1500, 1500), identifier="mineral03")
-    yield klass(Vector.arrp(2000, 1000), identifier="mineral04")
-    yield klass(Vector.arrp(2500,  500), identifier="mineral05")
+    number = kwargs.get('number', world_parameters.get('deposits')) + 2  # Add two to skip corners
+    length = kwargs.get('length', 3000)
+    slope  = kwargs.get('slope', -1)
+    yint   = kwargs.get('yint', 3000)
+
+    coords = zip(*linear_distribute(number, length, slope, yint))
+    for idx, coord in enumerate(coords):
+        if coord[0] in (0.0, length): continue  # Skip corners
+        yield klass(Vector.arrp(*coord), identifier="mineral%2i" % (idx+1))
 
 ##########################################################################
 ## The world environment for a simulation

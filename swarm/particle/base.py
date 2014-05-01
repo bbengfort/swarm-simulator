@@ -1,4 +1,4 @@
-# sarsim.particle
+# sarsim.particle.base
 # A Particle class for local behaviors
 #
 # Author:   Benjamin Bengfort <benjamin@bengfort.com>
@@ -7,7 +7,7 @@
 # Copyright (C) 2014 Bengfort.com
 # For license information, see LICENSE.txt
 #
-# ID: particle.py [] benjamin@bengfort.com $
+# ID: base.py [] benjamin@bengfort.com $
 
 """
 A Particle class for local behaviors
