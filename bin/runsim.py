@@ -89,7 +89,7 @@ def profile(args):
     """
 
     def run():
-        world = World()
+        world = World(ally_conf_path=args.conf_path)
         while world.time < args.iterations:
             try:
                 world.update()
@@ -131,6 +131,7 @@ def main(*argv):
                                 default=-1, help='Sort the statistics on a particular field.')
     profile_parser.add_argument('-i', '--iterations', metavar='STEPS', type=int, default=100,
                                 help='Number of iterations to profile')
+    profile_parser.add_argument('-c', '--conf-path', type=str, dest='conf_path', default='./conf/params.yaml', help='path to ally configuration file.')
     profile_parser.set_defaults(func=profile)
 
     # Handle input from the command line
