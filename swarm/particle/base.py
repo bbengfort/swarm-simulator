@@ -18,9 +18,10 @@ A Particle class for local behaviors
 ##########################################################################
 
 import numpy as np
-from params import *
-from exceptions import *
-from vectors import Vector
+
+from swarm.params import *
+from swarm.exceptions import *
+from swarm.vectors import Vector
 
 ##########################################################################
 ## Module Constants
