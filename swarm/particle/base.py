@@ -35,7 +35,8 @@ GUARDING  = "guarding"
 STUNNED   = "stunned"
 
 ## Maximum Velocity
-VMAX      = world_parameters.get('maximum_velocity')
+VMAX      = float(world_parameters.get('maximum_velocity'))
+VMAX2     = VMAX*VMAX
 
 ##########################################################################
 ## Particle Object
@@ -131,7 +132,7 @@ class Particle(object):
         for comp, vec, params in vectors:
             newvel = newvel + (params.weight * vec)
 
-        if newvel.length > VMAX:
+        if newvel.length2 > VMAX2:
             newvel = VMAX * newvel.unit
 
         self._vel = newvel
@@ -178,7 +179,7 @@ class Particle(object):
                 return
 
         if self.state == SEEKING:
-            if self.pos.distance(self.target.relative_pos(self.pos)) < 30:
+            if self.pos.distance2(self.target.relative_pos(self.pos)) < 900:
                 if self.target.stash > 0:
                     if self.target.idx != (self.enemy + '_home') and \
                             len([n for n in self.neighbors(200, 360, team=self.team) if n.state == GUARDING or n._state == GUARDING]) < self.params.depo_guard_threshold:
@@ -196,7 +197,7 @@ class Particle(object):
                     return
 
         if self.state == CARAVAN:
-            if self.pos.distance(self.target.relative_pos(self.pos)) < 10:
+            if self.pos.distance2(self.target.relative_pos(self.pos)) < 100:
                 self.target.drop()
                 self._loaded = False
 
@@ -278,8 +279,9 @@ class Particle(object):
         Determines whether or not another point (Vector) is in sight of the
         current particule based on a given radius and alpha.
         """
+        radius2 = radius * radius
         delta = point - self.pos
-        if delta.length > radius: return False # The distance is outside the vision radius
+        if delta.length2 > radius2: return False # The distance is outside the vision radius
 
         angle = self.vel.angle(delta)
         alpha = alpha / 2
@@ -335,7 +337,7 @@ class Particle(object):
         nearest  = None
         distance = None
         for neighbor in self.neighbors(radius, alpha, team):
-            d = self.pos.distance(neighbor.relative_pos(self.pos))
+            d = self.pos.distance2(neighbor.relative_pos(self.pos))
             if (distance is None or d < distance) and neighbor.state != except_state:
                 distance = d
                 nearest  = neighbor
@@ -376,7 +378,7 @@ class Particle(object):
 
         center = np.average(list(n.relative_pos(self.pos) for n in neighbors), axis=0)
         deltap = center - self.pos
-        scale  = (deltap.length / r) ** 2
+        scale  = deltap.length2 / (r*r)
 
         avgvel = np.average(list(n.vel for n in neighbors), axis=0)
         deltav = Vector.arr(avgvel)
@@ -397,14 +399,14 @@ class Particle(object):
 
         neighbors = [x for x in list(self.neighbors(r,a, team=self.enemy)) if x.state != STUNNED]
 
-        vec = Vector.zero()
+        arr = np.zeros(2)
 
         for n in neighbors:
             delta = self.pos - n.relative_pos(self.pos)
-            scale = (r - delta.length) / r
-            vec = vec + scale * delta.unit * VMAX
+            scale = ((r - delta.length) / r)**2
+            arr += scale * delta.unit * VMAX
 
-        return vec
+        return Vector.arr(arr)
 
     def separation(self):
         """
