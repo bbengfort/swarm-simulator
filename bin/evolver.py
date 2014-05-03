@@ -150,6 +150,10 @@ def inspect(args):
     inspection = app.control.inspect()
     return json.dumps(inspection.stats(), indent=4)
 
+def active(args):
+    activity = app.control.inspect()
+    return json.dumps(activity.active(), indent=4)
+
 ##########################################################################
 ## Main method
 ##########################################################################
@@ -187,6 +191,10 @@ def main(*argv):
     # Inspect command
     inspect_parser = subparsers.add_parser('inspect', help='Print stats about the current celery app')
     inspect_parser.set_defaults(func=inspect)
+
+    # Inspect command
+    active_parser = subparsers.add_parser('active', help='Print the currently active celery workers')
+    active_parser.set_defaults(func=active)
 
     # Handle input from the command line
     args = parser.parse_args()            # Parse the arguments
