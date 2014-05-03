@@ -121,7 +121,7 @@ class Evolver(object):
             next_gen[i][0].dump_file(path)
 
 if __name__ == '__main__':
-    #Evolver.random_pop()
+    Evolver.random_pop()
     #Evolver.random_fit()
-    Evolver.evolve(1)
+    #Evolver.evolve(1)
     print ""

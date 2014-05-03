@@ -25,7 +25,7 @@ from celery import Celery
 ##########################################################################
 
 app = Celery('evolve', include=['evolve.tasks'])
-app.config_from_object('celeryconfig')
+app.config_from_object('evolve.celeryconfig')
 
 if __name__ == '__main__':
     app.start()
