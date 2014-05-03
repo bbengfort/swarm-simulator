@@ -72,7 +72,7 @@ def run(args):
                 if task.ready():
                     individual['result'].update(task.result)
                     with open(individual['fit_path'], 'w') as fit:
-                        json.dump(individual['result'], fit, indent=4)
+                        json.dump(individual, fit, indent=4)
                 else:
                     done = False
         return done
@@ -93,10 +93,10 @@ def run(args):
                 'task':      runsim.delay(os.path.abspath(conf)),
             })
 
-            # Wait for simulations to complete
-            while not doneyet(individuals):
-                time.sleep(args.wait)
-
+        # Wait for simulations to complete
+        while not doneyet(individuals):
+            time.sleep(args.wait)
+        Evolver.evolve(generation, args.dirname)
 
 ##########################################################################
 ## Main method
