@@ -1,24 +1,57 @@
-POPSIZE = 50
-MAXGENS = 999
-TOURNEY_SIZE = 3
-P_MUT = 0.2
-MUT_WEIGHT = 0.2
-MUT_RADIUS = 20
-MUT_ALPHA = 20
+# evolve.base
+# Basic evolutionary proceedure for the Swarm Simulation
+#
+# Author:   Philip Kim <philip.y.kim@gmail.com>
+# Created:  Sat Apr 26 18:06:44 2014 -0400
+#
+# Copyright (C) 2014 Bengfort.com
+# For license information, see LICENSE.txt
+#
+# ID: base.py [8dac23a] philip.y.kim@gmail.com $
 
-import random
+"""
+Basic evolutionary proceedure for the Swarm Simulation
+"""
+
+##########################################################################
+## Imports
+##########################################################################
+
+
 import copy
+import random
+from utils import relpath
 from swarm.params import *
 
-class Evolver(object):
-    """Evolves a population using tournament selection."""
+##########################################################################
+## Module Constants
+##########################################################################
 
-    # The expected file name is '{generation}_{id}.yaml' for the configuration and '{generation}_{id}.fitness', with leading zeros.
+POPSIZE      = 50
+MAXGENS      = 999
+TOURNEY_SIZE = 3
+P_MUT        = 0.2
+MUT_WEIGHT   = 0.2
+MUT_RADIUS   = 20
+MUT_ALPHA    = 20
+CONF_DIR     = relpath(__file__, "../fixtures/")
+
+##########################################################################
+## Evolver
+##########################################################################
+
+class Evolver(object):
+    """
+    Evolves a population using tournament selection.
+    """
+
+    # The expected file name is '{generation}_{id}.yaml' for the configuration
+    # and '{generation}_{id}.fitness', with leading zeros.
     gen_len = len(str(POPSIZE - 1))
     n_len = len(str(POPSIZE - 1))
 
     @classmethod
-    def random_pop(klass, dir_path = "."):
+    def random_pop(klass, dir_path = CONF_DIR):
         for i in range(POPSIZE):
             config = AllyParameters()
             for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
@@ -29,7 +62,7 @@ class Evolver(object):
             config.dump_file(dir_path + "/%s_%s.yaml" % ("0".zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len)))
 
     @classmethod
-    def random_fit(klass, dir_path = "."):
+    def random_fit(klass, dir_path = CONF_DIR):
         for i in range(POPSIZE):
             path = dir_path + "/%s_%s.fit" % ("0".zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len))
             file = open(path, 'w')
@@ -37,7 +70,7 @@ class Evolver(object):
             file.close()
 
     @classmethod
-    def evolve(klass, generation, dir_path = "."):
+    def evolve(klass, generation, dir_path = CONF_DIR):
         curr_gen = [] # an array of (config, fitness) tuples
 
         for i in range(POPSIZE):
@@ -61,7 +94,7 @@ class Evolver(object):
             tourney = [random.choice(curr_gen) for i in range(TOURNEY_SIZE)];
             tourney = sorted(tourney, key=lambda x: x[1], reverse = True)
             next_gen.append(copy.deepcopy(tourney[0]))
-        
+
         # Mutate (the elite carry-forward is exempt)
         for i in range(1, POPSIZE):
             config = next_gen[i][0]
@@ -88,7 +121,7 @@ class Evolver(object):
             next_gen[i][0].dump_file(path)
 
 if __name__ == '__main__':
-    Evolver.random_pop()
-    # Evolver.random_fit()
-    # Evolver.evolve(0)
+    #Evolver.random_pop()
+    #Evolver.random_fit()
+    Evolver.evolve(1)
     print ""
