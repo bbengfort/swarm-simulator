@@ -109,6 +109,7 @@ def run(args):
                     with open(individual['fit_path'], 'w') as fit:
                         json.dump(individual, fit, indent=4)
                     print json.dumps(individual)
+                    sys.stdout.flush()
                 else:
                     done = False
         return done
@@ -120,6 +121,7 @@ def run(args):
 
     started = time.time()
     print started
+    sys.stdout.flush()
 
     dirname = os.path.expanduser(args.dirname)
     dirname = os.path.expandvars(dirname)
@@ -143,6 +145,7 @@ def run(args):
 
     finished = time.time()
     print finished
+    sys.stdout.flush()
 
     return "%s seconds to evolve %i generations" % ((finished - started), args.generations)
 
