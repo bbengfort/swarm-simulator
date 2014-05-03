@@ -1,0 +1,1 @@
+\vec { v_{ h } } =v_{ max }\frac { \vec { p_{ t } } -\vec { p }  }{ \left\| \vec { p_{ t } } -\vec { p }  \right\|  } 

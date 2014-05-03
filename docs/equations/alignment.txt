@@ -1,0 +1,1 @@
+\vec { v_{ al } } =v_{ max }{ \left( \frac { \left\| \Delta \vec { p }  \right\|  }{ r }  \right)  }^{ 2 }\frac { \Delta \vec { v }  }{ \left\| \Delta \vec { v }  \right\|  } 

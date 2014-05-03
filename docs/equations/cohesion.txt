@@ -1,0 +1,6 @@
+\\[ \vec { v_{ c } } =v_{ max }\frac { \vec { \Delta p }  }{ \left\| \vec { \Delta p }  \right\|  } \left( \frac { \left\| \vec { \Delta p }  \right\|  }{ r }  \right) ^{ 2 }\\]
+
+
+Going here $$$x = {-b \pm \sqrt{b^2-4ac} \over 2a}$$$ again 
+
+\\[P(E) = {n \choose k} p^k (1-p)^{ n-k} \\]
