@@ -108,7 +108,7 @@ def main(*argv):
 
     # Construct the argument parser
     parser = argparse.ArgumentParser(description=DESCRIPTION, epilog=EPILOG, version=VERSION)
-    subparsers = parser.add_subparsers(title='commands', description='Administrative commands for Octavo')
+    subparsers = parser.add_subparsers(title='commands', description='Administrative commands for simulations')
 
     # parser for visual simulation
     visual_parser = subparsers.add_parser('visual', help='Run the visual/PyGame version of the simulation')

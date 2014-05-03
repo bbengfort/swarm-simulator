@@ -17,7 +17,7 @@ Basic evolutionary proceedure for the Swarm Simulation
 ## Imports
 ##########################################################################
 
-
+import json
 import copy
 import random
 from utils import relpath
@@ -39,6 +39,21 @@ CONF_DIR     = relpath(__file__, "../fixtures/")
 ##########################################################################
 ## Evolver
 ##########################################################################
+
+def parse_fitness(path):
+    with open(path, 'r') as fit:
+        result = json.load(fit)
+    return int(result['result']['fitness'])
+
+def stats_path(generation, dirpath=CONF_DIR):
+    basename = "%s.stats" % str(generation).zfill(Evolver.gen_len)
+    return os.path.join(dirpath, basename)
+
+def individual_paths(generation, individual, dirpath=CONF_DIR):
+    basename = "%s_%s" % (str(generation).zfill(Evolver.gen_len), str(individual).zfill(Evolver.n_len))
+    confname = basename + ".yaml"
+    fitname  = basename + ".fit"
+    return os.path.join(dirpath, confname), os.path.join(dirpath, fitname)
 
 class Evolver(object):
     """
@@ -76,7 +91,7 @@ class Evolver(object):
         for i in range(POPSIZE):
             path = dir_path + "/%s_%s" % (str(generation).zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len))
             config = AllyParameters.load_file(path + ".yaml")
-            fitness = int(open(path + ".fit", 'r').readline())
+            fitness = parse_fitness(path+".fit")
             curr_gen.append((config, fitness))
 
         curr_gen = sorted(curr_gen, key=lambda x: x[1], reverse = True)
@@ -121,7 +136,7 @@ class Evolver(object):
             next_gen[i][0].dump_file(path)
 
 if __name__ == '__main__':
-    Evolver.random_pop()
-    #Evolver.random_fit()
+    #Evolver.random_pop()
+    Evolver.random_fit()
     #Evolver.evolve(1)
     print ""
