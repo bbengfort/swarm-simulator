@@ -71,8 +71,10 @@ def run(args):
                 task = individual['task']
                 if task.ready():
                     individual['result'].update(task.result)
+                    individual['task'] = str(individual['task'])
                     with open(individual['fit_path'], 'w') as fit:
                         json.dump(individual, fit, indent=4)
+                    print json.dumps(individual)
                 else:
                     done = False
         return done
@@ -81,6 +83,9 @@ def run(args):
     check = os.path.join(args.dirname, '00_00.yaml')
     if not os.path.exists(check):
         return "First individual not found at '%s' have you initialized the population?" % check
+
+    started = time.time()
+    print started
 
     for generation in xrange(args.generations):
         individuals = []
@@ -97,6 +102,11 @@ def run(args):
         while not doneyet(individuals):
             time.sleep(args.wait)
         Evolver.evolve(generation, args.dirname)
+
+    finished = time.time()
+    print finished
+
+    print "%s seconds to evolve %i generations" % ((finished - started), args.generations
 
 ##########################################################################
 ## Main method
