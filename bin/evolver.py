@@ -25,6 +25,7 @@ import json
 import argparse
 
 from evolve import Evolver
+from evolve.celery import app
 from evolve.tasks import runsim
 from celery.task.control import discard_all
 from evolve import CONF_DIR, POPSIZE, MAXGENS
@@ -145,6 +146,10 @@ def run(args):
 
     return "%s seconds to evolve %i generations" % ((finished - started), args.generations)
 
+def inspect(args):
+    inspection = app.control.inspect()
+    return json.dumps(inspection.stats(), indent=4)
+
 ##########################################################################
 ## Main method
 ##########################################################################
@@ -178,6 +183,10 @@ def main(*argv):
     reset_parser.add_argument('-f', action='store_true', default=False, dest='force', help='Force the reset without confirmation.')
     reset_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
     reset_parser.set_defaults(func=reset)
+
+    # Inspect command
+    inspect_parser = subparsers.add_parser('inspect', help='Print stats about the current celery app')
+    inspect_parser.set_defaults(func=inspect)
 
     # Handle input from the command line
     args = parser.parse_args()            # Parse the arguments
