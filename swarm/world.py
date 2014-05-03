@@ -26,10 +26,6 @@ from distribute import circular_distribute, linear_distribute
 ## Helper functions
 ##########################################################################
 
-# The team for home needs to be mineral for competitive...
-ALLY_HOME = ResourceParticle(Vector.arrp(750,750), identifier="ally_home", stash_size=0)
-ENEMY_HOME = ResourceParticle(Vector.arrp(2250,2250), identifier="enemy_home", stash_size=0)
-
 def initialize_particles(**kwargs):
     """
     Initialize N particles in a circular distribution around a center
@@ -45,7 +41,7 @@ def initialize_particles(**kwargs):
     radius = kwargs.get('radius', 100)
     team   = kwargs.get('team', 'ally')
     maxvel = kwargs.get('maximum_velocity', world_parameters.get('maximum_velocity'))
-    home   = kwargs.get('home', ALLY_HOME)
+    home   = kwargs.get('home', None)
     params = kwargs.get('params', world_parameters)
 
     # Generate coordinates and particles
@@ -84,6 +80,20 @@ class World(object):
     Performs the mechanics of simulating the world
     """
 
+    @staticmethod
+    def create_ally_home():
+        """
+        Constructs the ALLY_HOME on a per-simulation basis.
+        """
+        return ResourceParticle(Vector.arrp(750,750), identifier="ally_home", stash_size=0)
+
+    @staticmethod
+    def create_enemy_home():
+        """
+        Constructs the ENEMY_HOME on a per-simulation basis.
+        """
+        return ResourceParticle(Vector.arrp(2250,2250), identifier="enemy_home", stash_size=0)
+
     def __init__(self, **kwargs):
         # Helper function for accessing kwargs and parameters
         setting = lambda name: kwargs.pop(name, world_parameters.get(name))
@@ -95,6 +105,10 @@ class World(object):
         self.deposits = setting('deposits')
         self.time = 0
 
+        # Create the home particles
+        self.ally_home  = self.create_ally_home()
+        self.enemy_home = self.create_enemy_home()
+
         # Create an empty agents list
         self.agents = []
 
@@ -103,12 +117,12 @@ class World(object):
         if 'agents' in kwargs:
             self.add_agents(kwargs.pop('agents'))
         else:
-            self.add_agents(initialize_particles(params = ally_parameters))
-            self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=ENEMY_HOME))
+            self.add_agents(initialize_particles(params=ally_parameters, home=self.ally_home))
+            self.add_agents(initialize_particles(team="enemy", center=(2250,2250), home=self.enemy_home))
 
         # Initialize the bases
-        self.add_agent(ALLY_HOME)
-        self.add_agent(ENEMY_HOME)
+        self.add_agent(self.ally_home)
+        self.add_agent(self.enemy_home)
 
         # Initialize resources
         self.add_agents(initialize_resources())

@@ -120,26 +120,30 @@ def run(args):
     started = time.time()
     print started
 
+    dirname = os.path.expanduser(args.dirname)
+    dirname = os.path.expandvars(dirname)
+    dirname = os.path.abspath(dirname)
+
     for generation in xrange(args.generations):
         individuals = []
         for idx in xrange(POPSIZE):
-            conf, fit = individual_paths(generation, idx, args.dirname)
+            conf, fit = individual_paths(generation, idx, dirname)
             individuals.append({
                 'conf_path': conf,
                 'fit_path':  fit,
                 'result':    {},
-                'task':      runsim.delay(os.path.abspath(conf)),
+                'task':      runsim.delay(conf),
             })
 
         # Wait for simulations to complete
         while not doneyet(individuals):
             time.sleep(args.wait)
-        Evolver.evolve(generation, args.dirname)
+        Evolver.evolve(generation, dirname)
 
     finished = time.time()
     print finished
 
-    print "%s seconds to evolve %i generations" % ((finished - started), args.generations)
+    return "%s seconds to evolve %i generations" % ((finished - started), args.generations)
 
 ##########################################################################
 ## Main method

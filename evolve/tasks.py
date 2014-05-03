@@ -19,8 +19,8 @@ The simulation tasks required for Celery
 
 import time
 
+from swarm import World
 from evolve.celery import app
-from swarm import World, ALLY_HOME, ENEMY_HOME
 from swarm.exceptions import SimulationException
 
 ##########################################################################
@@ -39,9 +39,9 @@ def runsim(configuration):
     delta = finit - start
 
     return {
-        'fitness':     ALLY_HOME.stash,
+        'fitness':     world.ally_home.stash,
         'run_time':    delta,
         'iterations':  world.time,
-        'home_stash':  ALLY_HOME.stash,
-        'enemy_stash': ENEMY_HOME.stash,
+        'home_stash':  world.ally_home.stash,
+        'enemy_stash': world.enemy_home.stash,
     }
