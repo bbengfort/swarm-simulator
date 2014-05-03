@@ -106,7 +106,7 @@ def run(args):
     finished = time.time()
     print finished
 
-    print "%s seconds to evolve %i generations" % ((finished - started), args.generations
+    print "%s seconds to evolve %i generations" % ((finished - started), args.generations)
 
 ##########################################################################
 ## Main method
