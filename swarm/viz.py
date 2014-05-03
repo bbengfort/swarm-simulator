@@ -2,7 +2,11 @@
 
 import math
 import numpy
-import pygame
+
+try:
+    import pygame
+except ImportError:
+    print "Warning: PyGame required for visual simulations."
 
 def visualize(world, screen_size, fps):
     pygame.init()
@@ -75,7 +79,7 @@ def draw(screen, world, ally_0, ally_1, enemy_0, enemy_1, scale, mine_0, mine_1,
                 image = rotation(ally_1, angle)
             else:
                 image = rotation(ally_0, angle)
-        else: 
+        else:
             if agent.loaded:
                 image = rotation(enemy_1, angle)
             else:
