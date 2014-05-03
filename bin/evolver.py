@@ -26,6 +26,7 @@ import argparse
 
 from evolve import Evolver
 from evolve.tasks import runsim
+from celery.task.control import discard_all
 from evolve import CONF_DIR, POPSIZE, MAXGENS
 from evolve import individual_paths, stats_path
 
@@ -54,6 +55,38 @@ def evolve(args):
     """
     Evolver.evolve(args.generation[0], args.dirname)
     return "Generation %i with %i individuals created in %s" % (args.generation[0]+1, POPSIZE, args.dirname)
+
+def reset(args):
+    """
+    Resets the queue and removes the population files.
+    """
+
+    def confirm(prompt="Continue? [y/n] "):
+        valid = {'yes': True, 'y': True, 'no': False, 'n':False}
+        choice = raw_input(prompt).lower()
+        if choice in valid:
+            return valid[choice]
+        return confirm(prompt)
+
+    if not args.force:
+        print "Resetting will permanently remove population and Queue!"
+        print "Removing from: %s" % args.dirname
+        if not confirm():
+            return "Exiting without deleting anything."
+
+    files = 0
+    for name in os.listdir(args.dirname):
+        path = os.path.join(args.dirname, name)
+        try:
+            if os.path.isfile(path):
+                os.remove(path)
+                files += 1
+        except Exception as e:
+            print "Error removing %s: %s" % (path, str(e))
+
+    queue = discard_all()
+
+    return "%i files removed and %i tasks discarded" % (files, queue)
 
 def run(args):
     """
@@ -135,6 +168,12 @@ def main(*argv):
     run_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
     run_parser.add_argument('-w', '--wait', metavar='SECS', type=int, default=20, help='Seconds to wait before checking status of simulations.')
     run_parser.set_defaults(func=run)
+
+    # Reset command
+    reset_parser = subparsers.add_parser('reset', help='Empties queue and removes population.')
+    reset_parser.add_argument('-f', action='store_true', default=False, dest='force', help='Force the reset without confirmation.')
+    reset_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
+    reset_parser.set_defaults(func=reset)
 
     # Handle input from the command line
     args = parser.parse_args()            # Parse the arguments
