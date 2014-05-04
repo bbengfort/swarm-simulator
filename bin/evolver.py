@@ -20,6 +20,7 @@ Command line utilities for our evolutionary process
 
 import os
 import sys
+import csv
 import time
 import json
 import argparse
@@ -27,6 +28,7 @@ import argparse
 from evolve import Evolver
 from evolve.celery import app
 from evolve.tasks import runsim
+from collections import defaultdict
 from celery.task.control import discard_all
 from evolve import CONF_DIR, POPSIZE, MAXGENS
 from evolve import individual_paths, stats_path
@@ -93,6 +95,8 @@ def run(args):
     """
     Run evolution including simulation tasks with celery for a number of
     generations, keeping the best simulations around.
+
+    TODO: Move into evolve pacakge.
     """
 
     def doneyet(population):
@@ -150,12 +154,50 @@ def run(args):
     return "%s seconds to evolve %i generations" % ((finished - started), args.generations)
 
 def inspect(args):
+    """
+    Prints out the state of the Celery app.
+    """
     inspection = app.control.inspect()
     return json.dumps(inspection.stats(), indent=4)
 
 def active(args):
+    """
+    Lists the active workers and their tasks.
+    """
     activity = app.control.inspect()
     return json.dumps(activity.active(), indent=4)
+
+def evaluate(args):
+    """
+    Get statistics about the current state of the evolution.
+
+    TODO: Clean this up.
+    """
+    counts = defaultdict(int)
+    with open(args.outpath, 'w') as out:
+        writer = csv.DictWriter(out, fieldnames=('generation', 'individual', 'fitness', 'run_time', 'home_stash', 'enemy_stash', 'iterations'))
+        writer.writeheader()
+        for name in os.listdir(args.dirname):
+            path = os.path.join(args.dirname, name)
+            if not os.path.isfile(path): continue
+            base, ext = os.path.splitext(name)
+            counts[ext] += 1
+            if ext == '.stats':
+                if int(base) > counts['generations']: counts['generations'] = int(base)
+
+            if ext == '.fit':
+                gen, ind = base.split('_')
+                row = {
+                    'generation': int(gen),
+                    'individual': int(ind),
+                }
+                with open(path, 'r') as result:
+                    data = json.load(result)
+                    row.update(data['result'])
+                writer.writerow(row)
+
+    return json.dumps(counts, indent=4)
+
 
 ##########################################################################
 ## Main method
@@ -198,6 +240,12 @@ def main(*argv):
     # Inspect command
     active_parser = subparsers.add_parser('active', help='Print the currently active celery workers')
     active_parser.set_defaults(func=active)
+
+    # Evaluate command
+    eval_parser = subparsers.add_parser('evaluate', help='Get statistics about the state of evolution')
+    eval_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
+    eval_parser.add_argument('-o', '--outpath', type=str, default='stats.tsv', help='Location to write the statistics TSV')
+    eval_parser.set_defaults(func=evaluate)
 
     # Handle input from the command line
     args = parser.parse_args()            # Parse the arguments
