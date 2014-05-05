@@ -33,7 +33,10 @@ def runsim(configuration):
     world = World(ally_conf_path=configuration)
 
     for step in xrange(world.iterations):
-        world.update()
+        try:
+            world.update()
+        except Exception as e:
+            break
 
     finit = time.time()
     delta = finit - start
