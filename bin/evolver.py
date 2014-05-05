@@ -225,7 +225,7 @@ def main(*argv):
     run_parser.add_argument('-g', '--generations', type=int, default=MAXGENS, help='Number of generations to run the simulation for.')
     run_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
     run_parser.add_argument('-w', '--wait', metavar='SECS', type=int, default=20, help='Seconds to wait before checking status of simulations.')
-    run_parser.add_argument('-s', '-start', metavar='GEN', type=int, default=0, help='Starting generation in case a restart is needed.')
+    run_parser.add_argument('-s', '--start', metavar='GEN', type=int, default=0, help='Starting generation in case a restart is needed.')
     run_parser.set_defaults(func=run)
 
     # Reset command
