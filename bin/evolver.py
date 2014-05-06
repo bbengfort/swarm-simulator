@@ -131,7 +131,7 @@ def run(args):
     dirname = os.path.expandvars(dirname)
     dirname = os.path.abspath(dirname)
 
-    for generation in xrange(args.generations):
+    for generation in xrange(args.start, args.generations):
         individuals = []
         for idx in xrange(POPSIZE):
             conf, fit = individual_paths(generation, idx, dirname)
@@ -225,6 +225,7 @@ def main(*argv):
     run_parser.add_argument('-g', '--generations', type=int, default=MAXGENS, help='Number of generations to run the simulation for.')
     run_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
     run_parser.add_argument('-w', '--wait', metavar='SECS', type=int, default=20, help='Seconds to wait before checking status of simulations.')
+    run_parser.add_argument('-s', '--start', metavar='GEN', type=int, default=0, help='Starting generation in case a restart is needed.')
     run_parser.set_defaults(func=run)
 
     # Reset command
