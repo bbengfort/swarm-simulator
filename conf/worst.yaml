@@ -1,0 +1,85 @@
+caravan: 
+  components:
+    avoidance: 
+      alpha: 223
+      priority: 1
+      radius: 107
+      weight: 0.915
+    clearance: 
+      alpha: 91
+      priority: 4
+      radius: 252
+      weight: 0.0
+    homing: 
+      alpha: 324
+      priority: 2
+      radius: 238
+      weight: 0.414
+    separation: 
+      alpha: 4
+      priority: 3
+      radius: 125
+      weight: 0.384
+depo_guard_threshold: 0
+guarding: 
+  components:
+    avoidance: 
+      alpha: 247
+      priority: 1
+      radius: 250
+      weight: 0.318
+    mineral_cohesion: 
+      alpha: 92
+      priority: 3
+      radius: 19
+      weight: 0.0
+    separation: 
+      alpha: 207
+      priority: 2
+      radius: 71
+      weight: 0.0
+home_guard_threshold: 5
+seeking: 
+  components:
+    avoidance: 
+      alpha: 69
+      priority: 1
+      radius: 245
+      weight: 0.914
+    seeking: 
+      alpha: 165
+      priority: 2
+      radius: 234
+      weight: 0.0
+    separation: 
+      alpha: 300
+      priority: 3
+      radius: 11
+      weight: 0.912
+spreading: 
+  components:
+    alignment: 
+      alpha: 112
+      priority: 4
+      radius: 109
+      weight: 1.0
+    avoidance: 
+      alpha: 176
+      priority: 1
+      radius: 46
+      weight: 0.414
+    clearance: 
+      alpha: 108
+      priority: 3
+      radius: 307
+      weight: 0.354
+    cohesion: 
+      alpha: 277
+      priority: 5
+      radius: 150
+      weight: 0.446
+    separation: 
+      alpha: 349
+      priority: 2
+      radius: 395
+      weight: 0.367

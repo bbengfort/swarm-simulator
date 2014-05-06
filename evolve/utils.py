@@ -18,6 +18,8 @@ Helper functions
 ##########################################################################
 
 import os
+import json
+import random
 
 ##########################################################################
 ## File system helpers
@@ -28,3 +30,43 @@ def relpath(module, path):
     Returns the path from the module not the current working directory.
     """
     return os.path.normpath(os.path.join(os.path.dirname(module), path))
+
+##########################################################################
+## Parsing helpers
+##########################################################################
+
+def parse_fitness(path):
+    """
+    Extracts the fitness out of a fitness file.
+    """
+    with open(path, 'r') as fit:
+        result = json.load(fit)
+    return int(result['result']['fitness'])
+
+##########################################################################
+## Testing helpers
+##########################################################################
+
+def random_fitness(generation, confpath):
+    """
+    Generate random fitness values for a generation to test the evolver,
+    rather than attempt to run a long simulation.
+    """
+    for name in os.listdir(confpath):
+        base, ext = os.path.splitext(name)
+        if ext != '.yaml': continue
+
+        gen, ind  = [int(item) for item in base.split('_')]
+        if gen != generation: continue
+
+        fitpath = os.path.join(confpath, (base + ".fit"))
+        with open(fitpath, 'w') as fit:
+            fitness = random.randrange(0, 400)
+            randfit = {
+                'fitness':     fitness,
+                'run_time':    random.randrange(174, 314),
+                'iterations':  10000,
+                'home_stash':  fitness,
+                'enemy_stash': random.randrange(200, 800) - fitness,
+            }
+            json.dump(randfit, fit)

@@ -49,8 +49,8 @@ def initpop(args):
     """
     Initialize the population
     """
-    Evolver.random_pop(args.dirname[0])
-    return "Population with %i individuals generated in %s" % (POPSIZE, args.dirname[0])
+    Evolver.initialize_population(args.dirname, args.popsize)
+    return "Population with %i individuals generated in %s" % (args.popsize, args.dirname)
 
 def evolve(args):
     """
@@ -211,7 +211,8 @@ def main(*argv):
 
     # Initialize population command
     initpop_parser = subparsers.add_parser('initpop', help='Initialize a random population in a directory.')
-    initpop_parser.add_argument('dirname', nargs=1, type=str, help='Directory to init the population of configuration files.')
+    initpop_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
+    initpop_parser.add_argument('-p', '--popsize', type=int, default=POPSIZE, help='Size of the population to initialize.')
     initpop_parser.set_defaults(func=initpop)
 
     # Evolve command
