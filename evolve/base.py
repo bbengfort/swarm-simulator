@@ -20,69 +20,67 @@ Basic evolutionary proceedure for the Swarm Simulation
 import json
 import copy
 import random
-from utils import relpath
+
+from evolve.utils import *
 from swarm.params import *
+from evolve.params import *
 
-##########################################################################
-## Module Constants
-##########################################################################
+def stats_path(generation, dirpath=CONF_DIR):
+    """
+    Returns the path to the stats file for a given generation.
+    """
+    glen = len(str(POPSIZE-1))
+    basename = "%s.stats" % str(generation).zfill(glen)
+    return os.path.join(dirpath, basename)
 
-POPSIZE      = 50
-MAXGENS      = 999
-TOURNEY_SIZE = 3
-P_MUT        = 0.2
-MUT_WEIGHT   = 0.2
-MUT_RADIUS   = 20
-MUT_ALPHA    = 20
-CONF_DIR     = relpath(__file__, "../fixtures/")
+def individual_paths(generation, individual, dirpath=CONF_DIR):
+    """
+    Returns the path to the genotype yaml file and the fitness file of a
+    particular individual in a particular generation.
+    """
+    glen = len(str(MAXGENS-1))
+    nlen = len(str(POPSIZE-1))
+    basename = "%s_%s" % (str(generation).zfill(glen), str(individual).zfill(nlen))
+    confname = basename + ".yaml"
+    fitname  = basename + ".fit"
+    return os.path.join(dirpath, confname), os.path.join(dirpath, fitname)
 
 ##########################################################################
 ## Evolver
 ##########################################################################
-
-def parse_fitness(path):
-    with open(path, 'r') as fit:
-        result = json.load(fit)
-    return int(result['result']['fitness'])
-
-def stats_path(generation, dirpath=CONF_DIR):
-    basename = "%s.stats" % str(generation).zfill(Evolver.gen_len)
-    return os.path.join(dirpath, basename)
-
-def individual_paths(generation, individual, dirpath=CONF_DIR):
-    basename = "%s_%s" % (str(generation).zfill(Evolver.gen_len), str(individual).zfill(Evolver.n_len))
-    confname = basename + ".yaml"
-    fitname  = basename + ".fit"
-    return os.path.join(dirpath, confname), os.path.join(dirpath, fitname)
 
 class Evolver(object):
     """
     Evolves a population using tournament selection.
     """
 
-    # The expected file name is '{generation}_{id}.yaml' for the configuration
-    # and '{generation}_{id}.fitness', with leading zeros.
-    gen_len = len(str(POPSIZE - 1))
-    n_len = len(str(POPSIZE - 1))
-
-    @classmethod
-    def random_pop(klass, dir_path = CONF_DIR):
-        for i in range(POPSIZE):
+    @staticmethod
+    def initialize_population(confdir=CONF_DIR, popsize=POPSIZE):
+        """
+        Initializes the population in a specified directory. This is a
+        standalone, seperate method to ensure that the user must
+        initialize their own population.
+        """
+        for idx in xrange(popsize):
             config = AllyParameters()
             for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
-                for k, v in state.components.iteritems():
-                    v.weight = round(random.random(), 3)
-                    v.radius = random.randrange(50, 400)
-                    v.alpha = random.randrange(30, 360)
-            config.dump_file(dir_path + "/%s_%s.yaml" % ("0".zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len)))
+                for key, val in state.components.items():
+                    val.weight = round(random.random(), 3)
+                    val.radius = random.randrange(50, 400)
+                    val.alpha  = random.randrange(30, 360)
+            confpath, fitpath = individual_paths(0, idx, confdir)
+            config.dump_file(confpath)
 
-    @classmethod
-    def random_fit(klass, dir_path = CONF_DIR):
-        for i in range(POPSIZE):
-            path = dir_path + "/%s_%s.fit" % ("0".zfill(Evolver.gen_len), str(i).zfill(Evolver.n_len))
-            file = open(path, 'w')
-            file.write(str(random.randrange(0, 300)))
-            file.close()
+    def __init__(self, confdir, **kwargs):
+        """
+        Init the evolver with the path to the directory that contains the
+        configuration genotypes for a particular individual.
+        """
+        self.confdir = confdir
+        self.maxgens = kwargs.pop('maxgens', MAXGENS)   # Maximum number of generations to evolve
+        self.wait    = kwargs.pop('wait', WAIT)         # Wait in seconds before checking sim status
+        self.start   = kwargs.pop('start', 0)           # Starting generation in case restart needed
+        self.curgen  = kwargs.pop('start', 0)           # The current generation we are evolving
 
     @classmethod
     def evolve(klass, generation, dir_path = CONF_DIR):
@@ -136,7 +134,7 @@ class Evolver(object):
             next_gen[i][0].dump_file(path)
 
 if __name__ == '__main__':
-    #Evolver.random_pop()
-    Evolver.random_fit()
+    #Evolver.initialize_population()
+    random_fitness(0, CONF_DIR)
     #Evolver.evolve(1)
     print ""
