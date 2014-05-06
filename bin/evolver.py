@@ -27,7 +27,6 @@ import argparse
 
 from evolve import Evolver
 from evolve.celery import app
-from evolve.tasks import runsim
 from collections import defaultdict
 from celery.task.control import discard_all
 from evolve import CONF_DIR, POPSIZE, MAXGENS
@@ -51,13 +50,6 @@ def initpop(args):
     """
     Evolver.initialize_population(args.dirname, args.popsize)
     return "Population with %i individuals generated in %s" % (args.popsize, args.dirname)
-
-def evolve(args):
-    """
-    One step execution of a single evolution on a population
-    """
-    Evolver.evolve(args.generation[0], args.dirname)
-    return "Generation %i with %i individuals created in %s" % (args.generation[0]+1, POPSIZE, args.dirname)
 
 def reset(args):
     """
@@ -95,57 +87,27 @@ def run(args):
     """
     Run evolution including simulation tasks with celery for a number of
     generations, keeping the best simulations around.
-
-    TODO: Move into evolve pacakge.
     """
-
-    def doneyet(population):
-        """
-        Checks if tasks are completed, and if so, writes them to disk.
-        """
-        done = True
-        for individual in population:
-            if not individual['result']:
-                task = individual['task']
-                if task.ready():
-                    individual['result'].update(task.result)
-                    individual['task'] = str(individual['task'])
-                    with open(individual['fit_path'], 'w') as fit:
-                        json.dump(individual, fit, indent=4)
-                    print json.dumps(individual)
-                    sys.stdout.flush()
-                else:
-                    done = False
-        return done
+    kwargs = dict(vars(args))
+    kwargs.pop('func')
+    confdir = kwargs.pop('dirname')
+    evolver = Evolver(confdir, **kwargs)
 
     ## Check if there is a population in the specified directory
-    check = os.path.join(args.dirname, '00_00.yaml')
-    if not os.path.exists(check):
-        return "First individual not found at '%s' have you initialized the population?" % check
+    if not evolver.initialized():
+        return "Population has not been initialized!"
 
     started = time.time()
     print started
     sys.stdout.flush()
 
-    dirname = os.path.expanduser(args.dirname)
-    dirname = os.path.expandvars(dirname)
-    dirname = os.path.abspath(dirname)
-
-    for generation in xrange(args.start, args.generations):
-        individuals = []
-        for idx in xrange(POPSIZE):
-            conf, fit = individual_paths(generation, idx, dirname)
-            individuals.append({
-                'conf_path': conf,
-                'fit_path':  fit,
-                'result':    {},
-                'task':      runsim.delay(conf),
-            })
-
-        # Wait for simulations to complete
-        while not doneyet(individuals):
-            time.sleep(args.wait)
-        Evolver.evolve(generation, dirname)
+    try:
+        evolver.run()
+    except Exception as e:
+        finished = time.time()
+        print finished
+        sys.stdout.flush()
+        return str(e)
 
     finished = time.time()
     print finished
@@ -215,18 +177,13 @@ def main(*argv):
     initpop_parser.add_argument('-p', '--popsize', type=int, default=POPSIZE, help='Size of the population to initialize.')
     initpop_parser.set_defaults(func=initpop)
 
-    # Evolve command
-    evolve_parser = subparsers.add_parser('evolve', help='Execute selection and mutation for a generation.')
-    evolve_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
-    evolve_parser.add_argument('generation', type=int, nargs=1, help='The generation from which to evolve the next (by timestep).')
-    evolve_parser.set_defaults(func=evolve)
-
     # Run command
     run_parser = subparsers.add_parser('run', help='Run async evolution for some number of generations.')
     run_parser.add_argument('-g', '--generations', type=int, default=MAXGENS, help='Number of generations to run the simulation for.')
     run_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
     run_parser.add_argument('-w', '--wait', metavar='SECS', type=int, default=20, help='Seconds to wait before checking status of simulations.')
     run_parser.add_argument('-s', '--start', metavar='GEN', type=int, default=0, help='Starting generation in case a restart is needed.')
+    run_parser.add_argument('-p', '--popsize', type=int, default=POPSIZE, help='Size of the population to initialize.')
     run_parser.set_defaults(func=run)
 
     # Reset command

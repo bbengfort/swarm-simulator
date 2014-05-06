@@ -24,6 +24,7 @@ from evolve.utils import relpath
 ##########################################################################
 
 POPSIZE      = 50       # Size of population
+ELITES       = 5        # Number of elites to carry forward
 MAXGENS      = 999      # Maximum number of generations to evolve
 WAIT         = 20       # Wait in seconds before checking sim status
 TOURNEY_SIZE = 3        # Size of the tournament for selection

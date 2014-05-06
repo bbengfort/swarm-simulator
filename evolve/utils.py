@@ -19,7 +19,10 @@ Helper functions
 
 import os
 import json
+import yaml
 import random
+
+from swarm.params import AllyParameters
 
 ##########################################################################
 ## File system helpers
@@ -43,6 +46,23 @@ def parse_fitness(path):
         result = json.load(fit)
     return int(result['result']['fitness'])
 
+def parse_genotype(path):
+    """
+    Extracts the genotype out of a configuration yaml file.
+    """
+    with open(path, 'r') as conf:
+        return yaml.load(conf)
+
+def export_genotype(genotype, path=None):
+    """
+    Exports the ally configuration file.
+    """
+    config = AllyParameters()
+    config.configure(genotype)
+    if path:
+        config.dump_file(path)
+    return config
+
 ##########################################################################
 ## Testing helpers
 ##########################################################################
@@ -63,10 +83,12 @@ def random_fitness(generation, confpath):
         with open(fitpath, 'w') as fit:
             fitness = random.randrange(0, 400)
             randfit = {
-                'fitness':     fitness,
-                'run_time':    random.randrange(174, 314),
-                'iterations':  10000,
-                'home_stash':  fitness,
-                'enemy_stash': random.randrange(200, 800) - fitness,
+                'result': {
+                    'fitness':     fitness,
+                    'run_time':    random.randrange(174, 314),
+                    'iterations':  10000,
+                    'home_stash':  fitness,
+                    'enemy_stash': random.randrange(200, 800) - fitness,
+                }
             }
-            json.dump(randfit, fit)
+            json.dump(randfit, fit, indent=4)
