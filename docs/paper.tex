@@ -24,20 +24,25 @@ This extension has primarily focused on the physical domain to improve multirobo
 
 Many approaches have improved the simple local dynamics by adding minimal, cost effective top down components that also behave locally to produce emergent behavior. One very successful addition to flocks for problem solving is the addition of working memory \cite{winder2012role,hu2003particle}. Building on flocks with memory improvements, Rodriguez in \cite{rodriguez2004extending} added goal-driven intelligence in the form of a finite state machine (FSM) that switched the agent between different sets of movement behaviors according to its local environment and current goal. He was able to demonstrate that a team of such agents was able to solve a resource locate-and-collect problem, and that a team programmed with flocking behaviors outperformed teams of agents that did not influence each other's movements.
 
+These exciting results seem to indicate that in the future difficult environments might be economically explored or exploited by flocking robotic teams exhibiting local behavior for collective intelligence. For example in disaster areas such as fires or earthquakes, teams of flocking robots may be able to more effectively search and rescue victims. Landscapes such as other planetary bodies, the deep sea, or volcanos may similarly be accessible by such teams. However, in order to work in varied terrains and tasks specific swarm systems must be developed by humans to design both the bottom up movement behaviors and the top down controllers. Such design tasks have even led to formal design theory such as \cite{mataric1993designing,capera2003amas}. Although this theory might be applicable to a wide array of problems, a more flexibile approach could enable even more adaptive systems.
 
+Familiar evolutionary computation techniques such as Genetic Programming (GP) \cite{koza1992genetic}, Evolutionary Strategies \cite{rechenberg1989evolution}, and Genetic Algorithms \cite{goldberg1988genetic} have already shown proof of the potential of computational design techniques for machine learning, optimization, and even engineering. Finite state machines have already undergone evolutionary processes to produce better results for particular tasks like automatic target detection \cite{benson2000evolving}. Evolving movement behaviors would be the equivalent of other real value optimization problems. Using these techniques it seems that evolving the individual particles in a swarm would be an effective technique of natural design and adaptation that mimics nature.
 
-AMAS theory for designing complex adaptive systems \cite{capera2003amas}
-Designing swarms \cite{mataric1993designing}
+This is not to be confused with evolutionary technqiues that leverage swarms as in \cite{wei2002swarm,miranda2005evolutionary}. In this paper, we have attempted to extend Rodriguez's findings in \cite{rodriguez2004extending} by applying evolutionary techniques specifically to the agent control mechanisms. Rodriguez determined the structure of the FSM and the parameters defining each state through inspection and empirical techniques. We attempt to determine the optimal parameters by an evolutionary process that runs a population of randomly-generated FSM configurations through a simulated problem and then evolves the population through fitness-based selection, recombination, and mutation genetic operators.
 
-Evolutionary programming with swarms \cite{wei2002swarm,miranda2005evolutionary}
-
-In this article, we have attempted to extend Rodriguez's findings by applying evolutionary techniques to the agent control mechanisms. Rodriguez determined the structure of the FSM and the parameters defining each state through inspection and empirical techniques. We attempt to determine the optimal parameters by an evolutionary process that runs a population of randomly-generated FSM configurations through a simulated problem and then evolves the population through fitness-based selection and random mutation.
-
-Our hypothesis was that we could evolve a configuration for the FSM that would be competitive to a configuration tuned by a human.
+We will show that a novel finite state machine for movement control can be evolved using an evolutionary programming technique that performs as well as or better that those configured by a top-down design approach. We will present both the simulation using the best human designed parameters, then an evolutionary computation to evolve the individual particles in the simulation.
 
 \section{Methods}
 
-Because we were attempting to demonstrate to an evolutionary process could process an agent controller that was  competitive with the hand-tuned controller used by Rodriguez, our experimental setup was intentionally similar to his: two teams of homogenous agents, each with a designated "home" location, deployed in a two-dimensional world with periodic boundary conditions.
+In order to best demonstrate that an evolutionary process can generate an agent controller that is competitive with a human designed one, we have created an experimental setup that is intentionally similar to the work done in \cite{rodriguez2004extending}. The task is for a team of simulated agents to search and gather resources that are spread across a large two-dimensional world with periodic boundary conditions, then return the resources to a designated home base.
+
+The individuals of the team operate as a flock- local rules determining movement and goals lead to emergent flocking behavior. Each individual has a limited sight range and angle, the ability to communicate with other, nearby agents and a limited working memory. Particle behavior is governed by a finite state machine that determines how each particle moves given its individual state and the environment around it.
+
+The task is competitive, as there are two teams in the environment competing for the resources and therefore the simulation is non-deterministic. Agents can mine resources not only from designated depots, but also steal from the home base of the other team. The winner of a simulation is determined as the team that has the most resources in their home base at the end of a predetermined number of time steps.
+
+Fitness is the result of the simulation. One team is fixed as the best human designed team; the other is evolved. In this section we will present the details of the simulation itself, then the details of evolution.
+
+\subsection{Simulation}
 
 As in Rodriguez, an agent's velocity at each timestep was composed of some combination of the following vectors:
 
@@ -66,6 +71,8 @@ Therefore we implemented a penalty for colliding with another agent. An agent wi
 In order to allow for the selection of guarding behavior, the transition to the guarding state was controlled by two  evolvable parameters -- the "home guarding threshold" and the "deposit guarding threshold" -- that specified the number of friendly agents considered sufficient to guard the respective sites; a value of 0 disabled guarding behavior. This was the only instance in our simulation where a transition between states was controlled by an evolvable parameter.
 
 At the beginning of each timestep, therefore, each agent is in a particular state. For each velocity component in its current state, it determines the number of friendly and enemy agents in the respective neighborhood and calculates the direction and magnitude of the component. These components are multiplied by the respective weight, added to the agent's velocity from the previous timestep, and the resulting velocity is subjected to the Vmax constraint. The agent's position is updated by adding the velocity to the agent's position in the previous timestep. The agent then determines whether it should change its state based on the predefined transition rules and its current environment.
+
+\subsection{Evolution}
 
 \section{Experimental Procedure}
 
