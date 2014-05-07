@@ -17,7 +17,7 @@ The abstract goes here.
 
 \section{Introduction}
 
-Ever since Reynolds demonstrated that flocks of birds could be simulated as multi-agent systems, wherein each agent's motion is determined solely by local interactions, there has been interest in extending such systems to solve more general problems. Rodriguez, for example, added to each agent a goal-driven intelligence in the form of a finite state machine (FSM) that switched the agent between different sets of movement behaviors according to its local environment and current goal. He was able to demonstrate that a team of such agents was able to solve a resource locate-and-collect problem, and that a team programmed with flocking behaviors outperformed teams of agents that did not influence each other's movements.
+Ever since Reynolds demonstrated that flocks of birds could be simulated as multi-agent systems, wherein each agent's motion is determined solely by local interactions, there has been interest in extending such systems to solve more general problems \cite{reynolds1987flocks}. Rodriguez, for example, added to each agent a goal-driven intelligence in the form of a finite state machine (FSM) that switched the agent between different sets of movement behaviors according to its local environment and current goal. He was able to demonstrate that a team of such agents was able to solve a resource locate-and-collect problem, and that a team programmed with flocking behaviors outperformed teams of agents that did not influence each other's movements.
 
 In this article, we have attempted to extend Rodriguez's findings by applying evolutionary techniques to the agent control mechanisms. Rodriguez determined the structure of the FSM and the parameters defining each state through inspection and empirical techniques. We attempt to determine the optimal parameters by an evolutionary process that runs a population of randomly-generated FSM configurations through a simulated problem and then evolves the population through fitness-based selection and random mutation.
 
@@ -69,12 +69,7 @@ This work described herein represents only the first steps in the application of
 
 The next step would be to evolve the structure of the FSM itself; not only to allow the evolver to mix-in any component to any state, but to allow it to add new states, delete old states, and change the transitions between the states.
 
-\begin{thebibliography}{1}
-
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to {\LaTeX}}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
-
-\end{thebibliography}
+\bibliographystyle{plain}
+\bibliography{paper}
 
 \end{document}

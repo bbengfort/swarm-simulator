@@ -39,3 +39,9 @@ nosetests.xml
 
 # Fixtures
 fixtures/
+
+# Latex
+*.aux
+*.synctex.gz
+*.bbl
+*.blg
