@@ -45,3 +45,4 @@ fixtures/
 *.synctex.gz
 *.bbl
 *.blg
+*.fdb_latexmk

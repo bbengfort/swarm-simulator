@@ -1,0 +1,44 @@
+\documentclass{article}
+\setlength{\parskip}{\baselineskip}%
+\setlength{\parindent}{0pt}%
+\begin{document}
+
+The following are the movement vectors that have been defined in code.
+
+\textbf{Cohesion}
+
+Neighbors: team in sight by $r$ and $\alpha$ if they are not GUARDING or STUNNED.
+
+\[ \vec { v_{ c } } =v_{ max }\frac { \Delta  \vec { p }  }{ \left\|   \Delta \vec { p }  \right\|  } \left( \frac { \left\|  \Delta \vec {  p }  \right\|  }{ r }  \right) ^{ 2 } \]
+
+\textbf{Alignment}
+
+Neighbors: team in sight by $r$ and $\alpha$ if they are SEEKING or SPREADING 
+
+\[ \vec { v_{ al } } =v_{ max }{\left( \frac { \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2\frac {\Delta \vec{v}} { \left\| \Delta \vec{v} \right\| } \]
+
+\textbf{Avoidance}
+
+Neighbors: enemies in sight by $r$ and $\alpha$ if not STUNNED
+
+\[ \vec { v_{ av } } =\sum _{i=0}^{n} {v_{ max } \left( \frac{r - \left\| \Delta \vec{p_e} \right\|} {r} \right) \frac { \Delta \vec { p_e }  }{ \left\| \Delta \vec { p_e }  \right\|  }}  \]
+
+\textbf{Separation}
+
+Neighbors: team in sight by $r$ and $\alpha$ no matter their state
+
+\[ \vec { v_{ d } } =-v_{ max }\frac {\Delta \vec{p}} { \left\| \Delta \vec{p} \right\| }{\left( \frac { r - \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2 \]
+
+\textbf{Seeking/Homing/Mineral Cohesion}
+
+Target: Some saved target either from memory or found in sight
+
+\[ \vec{v_h} = v_{max} \frac {\vec{p_t} - \vec p} { \left\| \vec{p_t} - \vec p \right\| } \]
+
+\textbf{Clearance}
+
+Neighbors: team in sight by $r$ and $\alpha$ if they re not GUARDING or STUNNED
+
+\[ \vec{v_{cl}} = v_{max} \frac {\Delta \vec p_\perp } { \left\| \Delta \vec p_\perp  \right\| }  \]
+
+\end{document}
