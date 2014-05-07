@@ -1,6 +1,21 @@
-	Abstract
+\documentclass[12pt,journal,compsoc]{IEEEtran}
+\providecommand{\PSforPDF}[1]{#1}
+\hyphenation{op-tical net-works semi-conduc-tor}
 
-	Introduction
+
+\begin{document}
+\title{Evolutionary Methods for Particle Swarm Movement}
+\author{Benjamin~Bengfort,~Kevin~Harrison,~and~Philip~Kim}
+
+% make the title area
+\maketitle
+
+\begin{abstract}
+Abstract goes here.
+The abstract goes here.
+\end{abstract}
+
+\section{Introduction}
 
 Ever since Reynolds demonstrated that flocks of birds could be simulated as multi-agent systems, wherein each agent's motion is determined solely by local interactions, there has been interest in extending such systems to solve more general problems. Rodriguez, for example, added to each agent a goal-driven intelligence in the form of a finite state machine (FSM) that switched the agent between different sets of movement behaviors according to its local environment and current goal. He was able to demonstrate that a team of such agents was able to solve a resource locate-and-collect problem, and that a team programmed with flocking behaviors outperformed teams of agents that did not influence each other's movements.
 
@@ -8,11 +23,11 @@ In this article, we have attempted to extend Rodriguez's findings by applying ev
 
 Our hypothesis was that we could evolve a configuration for the FSM that would be competitive to a configuration tuned by a human.
 
-	Methods
+\section{Methods}
 
 Because we were attempting to demonstrate to an evolutionary process could process an agent controller that was  competitive with the hand-tuned controller used by Rodriguez, our experimental setup was intentionally similar to his: two teams of homogenous agents, each with a designated "home" location, deployed in a two-dimensional world with periodic boundary conditions.
 
-As in Rodriguez, an agent's velocity at each timestep was composed of some combination of the following vectors: 
+As in Rodriguez, an agent's velocity at each timestep was composed of some combination of the following vectors:
 
 Cohesion: a vector pointing towards the average position of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the average neighbor is zero and increasing quadratically with distance until it is equal to Vmax when the distance to the average neighbor is r.
 
@@ -20,38 +35,46 @@ Alignment: a vector pointing in the same direction as the average velocity of fr
 
 Separation: a vector pointing away from the average position of friendly agents in the neighborhood, with magnitude equal to Vmax when the distance between the agent and the average position is zero, and decreasing quadratically with distance until it is zero when the distance to the average neighbor is r.
 
-Seeking/Homing/Mineral Cohesion: vectors pointing directly towards the targetted site with magnitude Vmax.
+%Seeking, Homing, Mineral Cohesion: vectors pointing directly towards the targetted site with magnitude Vmax.
 
 Clearance: a vector pointing in a direction orthogonal to the difference between the average neighbor position and the agent's position with magnitude Vmax.
 
 Avoidance: a vector pointing away from an enemy agent in the neighborhood, with magnitude Vmax when distance to the enemy is zero and decreasing linearly with distance until it is zero when the distance is r. Unlike all the other components, this can be applied multiple times each timestep--once for every enemy in the neighborhood.
 
-Also per Rodriguez, the FSM controlling each agent was always in one of four states: searching for new resources, moving to the last known resource deposit, carrying resources back to the home location, or guarding the home or a resource deposit. Each state was composed of some combination of the previously described velocity components, each characterized by a numerical weight and the radius and angle that defined the neighborhood. 
+Also per Rodriguez, the FSM controlling each agent was always in one of four states: searching for new resources, moving to the last known resource deposit, carrying resources back to the home location, or guarding the home or a resource deposit. Each state was composed of some combination of the previously described velocity components, each characterized by a numerical weight and the radius and angle that defined the neighborhood.
 
 Unlike Rodriguez, who prioritized each component and applied them in order, discarding any component that would have caused the velocity to exceed the maximum velocity, velocity in our simulation was a simple linear combination of the components; the maximum velocity constraint was only applied at the end to the resulting sum. Also unlike Rodriguez, agents in our simulation had "inertia" and started each timestep with the velocity of the previous timestep.
 
 Transitions between states were triggered by conditions in each agent's local environment according to hard-coded rules. For example, an agent in the searching state that detected a mineral deposit within a 200-unit radius (in any direction) would push that deposit onto the top of its memory stack and transition to the seeking state (whcih is characterized by movement toward the top location on its stack).
 
-One of Rodriguez's main findings was that it was advantageous for the agents to post "guards" on their homes and/or on any discovered resource deposits. Agents that guarded only the home performed best of all, though agents that guarded both the home and deposits still bested non-guarding agents. In order for guarding behavior to be feasible, however, agents must avoid agents on the enemy team. Since we were allowing evolution to determine the strength of this avoidance parameter, we expected that in the absence of a "natural" motivation for avoidance, the avoidance parameter would be selected down to zero, allowing the agents to ignore enemy guards. 
+One of Rodriguez's main findings was that it was advantageous for the agents to post "guards" on their homes and/or on any discovered resource deposits. Agents that guarded only the home performed best of all, though agents that guarded both the home and deposits still bested non-guarding agents. In order for guarding behavior to be feasible, however, agents must avoid agents on the enemy team. Since we were allowing evolution to determine the strength of this avoidance parameter, we expected that in the absence of a "natural" motivation for avoidance, the avoidance parameter would be selected down to zero, allowing the agents to ignore enemy guards.
 
 Therefore we implemented a penalty for colliding with another agent. An agent within 10 units of an enemy agent was rendered unable to move for a number of timesteps equal to 180 minus the angle of incidence in degrees. For example, if an agent collided with an opposing agent at right angles, the agent struck in the side would be unable to move for 90 timesteps, whereas the agent struck in the front would be unable to move for 180 timesteps. Similarly, being "rear-ended" by an opposing agent had no penalty at all. The hope was that by assigning the "responsible" agent more of the penalty, we would create an incentive to avoid collision.
 
 In order to allow for the selection of guarding behavior, the transition to the guarding state was controlled by two  evolvable parameters -- the "home guarding threshold" and the "deposit guarding threshold" -- that specified the number of friendly agents considered sufficient to guard the respective sites; a value of 0 disabled guarding behavior. This was the only instance in our simulation where a transition between states was controlled by an evolvable parameter.
 
-At the beginning of each timestep, therefore, each agent is in a particular state. For each velocity component in its current state, it determines the number of friendly and enemy agents in the respective neighborhood and calculates the direction and magnitude of the component. These components are multiplied by the respective weight, added to the agent's velocity from the previous timestep, and the resulting velocity is subjected to the Vmax constraint. The agent's position is updated by adding the velocity to the agent's position in the previous timestep. The agent then determines whether it should change its state based on the predefined transition rules and its current environment. 
+At the beginning of each timestep, therefore, each agent is in a particular state. For each velocity component in its current state, it determines the number of friendly and enemy agents in the respective neighborhood and calculates the direction and magnitude of the component. These components are multiplied by the respective weight, added to the agent's velocity from the previous timestep, and the resulting velocity is subjected to the Vmax constraint. The agent's position is updated by adding the velocity to the agent's position in the previous timestep. The agent then determines whether it should change its state based on the predefined transition rules and its current environment.
 
-	Experimental Procedures
+\section{Experimental Procedure}
 
-The computational experiment we ran consisted of pitting two simulated teams in competition with each other in a 3000 x 3000 world for a limited time. We restricted each team to 10 agents, vice 50 in the Rodriguez paper, and used 5 resource deposits instead of 8; both changes were to make the simulation more computationally tractable. The "red" team's behavior was fixed to parameters similar to those found empirically by Rodriguez to yield the best results. At the start of evolution we randomly generated 50 configurations to control the "black" team. Fitness was defined as the number of resources gathered by the black team after 10,000 timesteps. 
+The computational experiment we ran consisted of pitting two simulated teams in competition with each other in a 3000 x 3000 world for a limited time. We restricted each team to 10 agents, vice 50 in the Rodriguez paper, and used 5 resource deposits instead of 8; both changes were to make the simulation more computationally tractable. The "red" team's behavior was fixed to parameters similar to those found empirically by Rodriguez to yield the best results. At the start of evolution we randomly generated 50 configurations to control the "black" team. Fitness was defined as the number of resources gathered by the black team after 10,000 timesteps.
 
-After running each of the 50 configurations, we subjected the population to a round of evolution. The most fit individual from the current generation was always carried into the next generation, with the other 49 selected via tournaments of size 3. Each of the 49 was then subjected to mutation, with an independent 20% chance of mutating each weight, each radius, and each alpha of every component. If selected for mutation, the trait was changed by a random value uniformly-distributed between -0.2 and 0.2 for weights, -20 and 20 for radii, and -20 and 20 for alphas. Additionally, the home guarding and deposit guarding threshold each had a 20% of changing by plus or minus 1.
+After running each of the 50 configurations, we subjected the population to a round of evolution. The most fit individual from the current generation was always carried into the next generation, with the other 49 selected via tournaments of size 3. Each of the 49 was then subjected to mutation, with an independent 20\% chance of mutating each weight, each radius, and each alpha of every component. If selected for mutation, the trait was changed by a random value uniformly-distributed between -0.2 and 0.2 for weights, -20 and 20 for radii, and -20 and 20 for alphas. Additionally, the home guarding and deposit guarding threshold each had a 20\% of changing by plus or minus 1.
 
-	Results
+\section{Results}
+results
 
-	Discussion
-
+\section{Discussion}
 This work described herein represents only the first steps in the application of evolutionary techniques to this problem domain. By mutating and applying selective pressure to the movement component parameters, we were able to show that a machine could optimize the parameters better than a person. This was a form of optimization, but it did not result in novel behaviors. Indeed, since we hard-wired the transitions between the states (allowing for the guarding threshold to evolve) and allowed the evolver to mutate existing movement components in a given state but not to add them (i.e., we pre-defined which components could have non-zero weight for each state), we held constant the "meaning" of each state.
 
 The next step would be to evolve the structure of the FSM itself; not only to allow the evolver to mix-in any component to any state, but to allow it to add new states, delete old states, and change the transitions between the states.
 
+\begin{thebibliography}{1}
 
+\bibitem{IEEEhowto:kopka}
+H.~Kopka and P.~W. Daly, \emph{A Guide to {\LaTeX}}, 3rd~ed.\hskip 1em plus
+  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+
+\end{thebibliography}
+
+\end{document}
