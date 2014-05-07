@@ -119,11 +119,13 @@ class Configuration(object):
         return config
 
     def dump_file(self, path):
-        file = open(path, 'w')
-        d = dict(self.options())
-        del d['max_radius']
-        yaml.dump(d, file, default_flow_style=False)
-        file.close()
+        """
+        Dumps the YAML configuration out to a file.
+        """
+        with open(path, 'wb') as out:
+            data = dict(self.options())
+            del data['max_radius']
+            yaml.dump(data, out, default_flow_style=False)
 
         # kludgy way of removing the type tags
         for line in fileinput.input(path, inplace = True):

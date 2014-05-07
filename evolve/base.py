@@ -254,40 +254,39 @@ class Evolver(object):
                 # Load configuration for the indvidual (Note this is a dictionary currently!)
                 parents[item['individual']]['config'] = parse_genotype(item['path'])
 
-        # Create an ordered array of (config, fitness) tuples
-        parents  = [(val['config'], val['fitness']) for val in parents.values()]
-
-        # Sort the current population according to their fitness.
-        parents  = sorted(parents, key=itemgetter(1), reverse=True)
+        # Create an ordered array of (config, fitness, individual) tuples
+        parents  = [(val['config'], val['fitness'], key) for key,val in parents.items()]
 
         # Selection from parent population
         children = self.selection(parents, elites)
 
         # Recombination (elites are exempt)
 
-
         # Mutate (the elite carry-forward is exempt)
-        for config in children[:elites]:
+        for config in children[elites:]:
             if (random.random() < P_MUT):
-                config.home_guard_threshold = min(5, max(0, config.home_guard_threshold + (1 if random.random() < 0.5 else -1)))
+                config['home_guard_threshold'] = min(5, max(0, config['home_guard_threshold'] + (1 if random.random() < 0.5 else -1)))
 
             if (random.random() < P_MUT):
-                config.depo_guard_threshold = min(5, max(0, config.depo_guard_threshold + (1 if random.random() < 0.5 else -1)))
+                config['depo_guard_threshold'] = min(5, max(0, config['depo_guard_threshold'] + (1 if random.random() < 0.5 else -1)))
 
-            for state in [config.spreading, config.seeking, config.caravan, config.guarding]:
-                for k, v in state.components.iteritems():
+            for state in ['spreading', 'seeking', 'caravan', 'guarding']:
+                for k, v in config[state]['components'].iteritems():
                     if (random.random() < P_MUT):
-                        v.weight = min(1.0, max(0.0, round(v.weight - MUT_WEIGHT + (2.0 * random.random() * MUT_WEIGHT), 3)))
+                        v['weight'] = min(1.0, max(0.0, round(v['weight'] - MUT_WEIGHT + (2.0 * random.random() * MUT_WEIGHT), 3)))
                     if (random.random() < P_MUT):
-                        v.radius = min(500, max(0, v.radius - MUT_RADIUS + random.randrange(0, 2 * MUT_RADIUS + 1)))
+                        v['radius'] = min(500, max(0, v['radius'] - MUT_RADIUS + random.randrange(0, 2 * MUT_RADIUS + 1)))
                     if (random.random() < P_MUT):
-                        v.alpha = min(359, max(0, v.alpha - MUT_ALPHA + random.randrange(0, 2 * MUT_ALPHA + 1)))
+                        v['alpha'] = min(359, max(0, v['alpha'] - MUT_ALPHA + random.randrange(0, 2 * MUT_ALPHA + 1)))
+
+        # Increment the generation
+        self.curgen += 1
 
         # Dump the files out to disk
-        self.curgen += 1
+        assert len(set([id(c) for c in children])) == self.popsize
         for idx, child in enumerate(children):
             path, _ = individual_paths(self.curgen, idx, self.confdir)
-            child.dump_file(path)
+            export_genotype(child, path)
 
     def selection(self, parents, elites=ELITES, tourney_size=TOURNEY_SIZE):
         """
@@ -299,7 +298,11 @@ class Evolver(object):
 
         Note: Tournament does not allow elites to participate!
         """
-        children = [copy.deepcopy(p) for p in parents[:elites]]
+        # Sort the current population according to their fitness.
+        parents  = sorted(parents, key=itemgetter(1), reverse=True)
+        print "Elites are: %s" % ", ".join(str(i) for c,f,i in parents[:elites])
+        # Start by selecting the elites as children
+        children = [copy.deepcopy(c) for c,f,i in parents[:elites]]
         parents  = parents[elites:]
 
         if parents:
@@ -307,11 +310,11 @@ class Evolver(object):
             for idx in xrange(elites, self.popsize):
                 tourney = [random.choice(parents) for jdx in xrange(tourney_size)]
                 tourney = sorted(tourney, key=itemgetter(1), reverse=True)
-                children.append(copy.deepcopy(tourney[0]))
+                children.append(copy.deepcopy(tourney[0][0]))
 
         assert len(children) == self.popsize                        # Assert we have enough children
         assert len(set([id(c) for c in children])) == self.popsize  # Assert that all children are copies
-        return [export_genotype(c) for c,f in children]             # Convert to a new copy of parameters
+        return children                                             # Return dictionary values to mutate
 
     def write_stats(self):
         """
@@ -332,7 +335,28 @@ class Evolver(object):
             json.dump(stats, out, indent=4)
 
 if __name__ == '__main__':
+    import hashlib
+    def md5(path):
+        with open(path, 'rb') as fh:
+            m = hashlib.md5()
+            while True:
+                data = fh.read(8192)
+                if not data:
+                    break
+                m.update(data)
+            return m.hexdigest()
+
     #Evolver.initialize_population()
-    #random_fitness(0, CONF_DIR)
+    random_fitness(0, CONF_DIR)
     evolver = Evolver(CONF_DIR)
     evolver.evolve()
+
+    counts = defaultdict(list)
+    for item in evolver.listdir():
+        if item['ext'] == '.yaml':
+            counts[md5(item['path'])].append(item['name'])
+
+    import json
+    print json.dumps(counts, indent=4)
+
+    unchanged = [key for key in counts if len(counts[key]) > 1]
