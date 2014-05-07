@@ -261,23 +261,10 @@ class Evolver(object):
         children = self.selection(parents, elites)
 
         # Recombination (elites are exempt)
+        self.recombination(children, elites)
 
         # Mutate (the elite carry-forward is exempt)
-        for config in children[elites:]:
-            if (random.random() < P_MUT):
-                config['home_guard_threshold'] = min(5, max(0, config['home_guard_threshold'] + (1 if random.random() < 0.5 else -1)))
-
-            if (random.random() < P_MUT):
-                config['depo_guard_threshold'] = min(5, max(0, config['depo_guard_threshold'] + (1 if random.random() < 0.5 else -1)))
-
-            for state in ['spreading', 'seeking', 'caravan', 'guarding']:
-                for k, v in config[state]['components'].iteritems():
-                    if (random.random() < P_MUT):
-                        v['weight'] = min(1.0, max(0.0, round(v['weight'] - MUT_WEIGHT + (2.0 * random.random() * MUT_WEIGHT), 3)))
-                    if (random.random() < P_MUT):
-                        v['radius'] = min(500, max(0, v['radius'] - MUT_RADIUS + random.randrange(0, 2 * MUT_RADIUS + 1)))
-                    if (random.random() < P_MUT):
-                        v['alpha'] = min(359, max(0, v['alpha'] - MUT_ALPHA + random.randrange(0, 2 * MUT_ALPHA + 1)))
+        self.mutation(children, elites)
 
         # Increment the generation
         self.curgen += 1
@@ -315,6 +302,76 @@ class Evolver(object):
         assert len(children) == self.popsize                        # Assert we have enough children
         assert len(set([id(c) for c in children])) == self.popsize  # Assert that all children are copies
         return children                                             # Return dictionary values to mutate
+
+    def mutation(self, genotypes, elites=ELITES, **params):
+        """
+        Conducts linear mutation on the children using the mutation params.
+        This mutates the genotypes in place as they are passed in dicts.
+        """
+        mutprob   = params.get('mutprob', P_MUT)
+        mutweight = params.get('mutweight', MUT_WEIGHT)
+        mutradius = params.get('mutradius', MUT_RADIUS)
+        mutalpha  = params.get('mutalpha', MUT_ALPHA)
+
+        def minmax(high, low, val):
+            return min(high, max(low, val))
+
+        for config in genotypes[elites:]:
+            if (random.random() < mutprob):
+                mutation = config['home_guard_threshold'] + (1 if random.random() < 0.5 else -1)
+                config['home_guard_threshold'] = minmax(5, 0, mutation)
+
+            if (random.random() < mutprob):
+                mutation = config['depo_guard_threshold'] + (1 if random.random() < 0.5 else -1)
+                config['depo_guard_threshold'] = minmax(5, 0, mutation)
+
+            for state in ['spreading', 'seeking', 'caravan', 'guarding']:
+                for k, v in config[state]['components'].iteritems():
+
+                    if (random.random() < mutprob):
+                        weight = round(v['weight'] - mutweight + (2.0 * random.random() * mutweight), 3)
+                        v['weight'] = minmax(1.0, 0.01, weight)
+
+                    if (random.random() < mutprob):
+                        radius = v['radius'] - mutradius + random.randrange(0, 2 * mutradius + 1)
+                        v['radius'] = minmax(500, 1, radius)
+
+                    if (random.random() < mutprob):
+                        alpha  = v['alpha'] - mutalpha + random.randrange(0, 2 * mutalpha + 1)
+                        v['alpha']  = minmax(359, 1, alpha)
+
+    def recombination(self, genotypes, elites=ELITES, **params):
+        """
+        Conducts recombination by replacing a genotype child with an
+        intermediate recombination with another child in the population.
+        You can specify recombination parameters via the params.
+        """
+        prob = params.get('recprob', P_REC)
+
+        def minmax(high, low, val):
+            return min(high, max(low, val))
+
+        for child in genotypes[elites:]:
+            if random.random() < prob:
+                other = random.choice(genotypes)
+
+                for state in ['spreading', 'seeking', 'caravan', 'guarding']:
+                    for key, val in child[state]['components'].items():
+                        # Combine weights
+                        x1 = child[state]['components'][key]['weight']
+                        y1 = other[state]['components'][key]['weight']
+                        val['weight'] = minmax(1.0, 0.0, round((x1+y1)/2.0, 3))
+
+                        # Combine radii
+                        x2 = child[state]['components'][key]['radius']
+                        y2 = other[state]['components'][key]['radius']
+                        val['radius'] = minmax(500, 1, int((x2+y2)/2.0))
+
+                        # Combine alpha
+                        x3 = child[state]['components'][key]['alpha']
+                        y3 = other[state]['components'][key]['alpha']
+                        val['alpha']  = minmax(359, 1, int((x3+y3)/2.0))
+
 
     def write_stats(self):
         """

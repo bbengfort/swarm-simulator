@@ -113,7 +113,7 @@ def run(args):
     print finished
     sys.stdout.flush()
 
-    return "%s seconds to evolve %i generations" % ((finished - started), args.generations)
+    return "%s seconds to evolve %i generations" % ((finished - started), args.maxgens)
 
 def inspect(args):
     """
@@ -179,7 +179,7 @@ def main(*argv):
 
     # Run command
     run_parser = subparsers.add_parser('run', help='Run async evolution for some number of generations.')
-    run_parser.add_argument('-g', '--generations', type=int, default=MAXGENS, help='Number of generations to run the simulation for.')
+    run_parser.add_argument('-g', '--maxgens', type=int, default=MAXGENS, help='Number of generations to run the simulation for.')
     run_parser.add_argument('-d', '--dirname', type=str, default=CONF_DIR, help='Directory with the population and fitness files.')
     run_parser.add_argument('-w', '--wait', metavar='SECS', type=int, default=20, help='Seconds to wait before checking status of simulations.')
     run_parser.add_argument('-s', '--start', metavar='GEN', type=int, default=0, help='Starting generation in case a restart is needed.')

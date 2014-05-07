@@ -24,11 +24,12 @@ from evolve.utils import relpath
 ##########################################################################
 
 POPSIZE      = 50       # Size of population
-ELITES       = 5        # Number of elites to carry forward
+ELITES       = 1        # Number of elites to carry forward
 MAXGENS      = 999      # Maximum number of generations to evolve
 WAIT         = 20       # Wait in seconds before checking sim status
 TOURNEY_SIZE = 3        # Size of the tournament for selection
 P_MUT        = 0.2      # Probability of mutation
+P_REC        = 0.5      # Probability of recombination
 MUT_WEIGHT   = 0.2      # Weight of mutation
 MUT_RADIUS   = 20       # Radius of mutation
 MUT_ALPHA    = 20       # Alpha of mutation
