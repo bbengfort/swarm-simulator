@@ -28,6 +28,8 @@ Note that you can get help and the various options using the `--help` flag. At t
 
 Please let us know if you have any trouble!
 
+**NOTE**: It turns out that this library requires the installation and compiling of several C libraries, particularly for PyGame, Numpy, librabbitmq, amqp, etc. The discussion for this will be different depending on your machine, but we'd be glad to help out any way we can to get it running for you!
+
 ## SAR Simulation ##
 This package is designed to implement an offline (non-visual) search and retrieval simulation based on the implementation in [1]. This offline simulation will then be used to evaluate the fitness of various parameters that are loaded via YAML configuration file.
 
