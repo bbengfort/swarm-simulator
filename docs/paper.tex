@@ -32,7 +32,7 @@ This is not to be confused with evolutionary technqiues that leverage swarms as 
 
 We will show that a novel finite state machine for movement control can be evolved using an evolutionary programming technique that performs as well as or better that those configured by a top-down design approach. We will present both the simulation using the best human designed parameters, then an evolutionary computation to evolve the individual particles in the simulation.
 
-\section{Methods}
+\section{Methodology}
 
 In order to best demonstrate that an evolutionary process can generate an agent controller that is competitive with a human designed one, we have created an experimental setup that is intentionally similar to the work done in \cite{rodriguez2004extending}. The task is for a team of simulated agents to search and gather resources that are spread across a large two-dimensional world with periodic boundary conditions, then return the resources to a designated home base.
 
@@ -40,23 +40,43 @@ The individuals of the team operate as a flock- local rules determining movement
 
 The task is competitive, as there are two teams in the environment competing for the resources and therefore the simulation is non-deterministic. Agents can mine resources not only from designated depots, but also steal from the home base of the other team. The winner of a simulation is determined as the team that has the most resources in their home base at the end of a predetermined number of time steps.
 
-Fitness is the result of the simulation. One team is fixed as the best human designed team; the other is evolved. In this section we will present the details of the simulation itself, then the details of evolution.
+The evolutionary process uses this simulation to pit individuals created via genetic operations against the best designed human agent. The fitness of the evolved team is a function of the resources that they have collected vs. the resources the other team collected against them. The next generation of evolution is then dependent of the fitness of teams as run in the simulation. In the parlance of evolutionary computing, the genotype is the real valued vector that represents the finite state machine of the particle and the phenotype is the emergent behavior of the team as a whole as it participates in the simulation.
+
+In this section we will present the details of the simulation, as well as the details of the evolutionary computation mechanism that searches for the optimal, most economic particle in the simulation.
 
 \subsection{Simulation}
 
-As in Rodriguez, an agent's velocity at each timestep was composed of some combination of the following vectors:
+The movement behavior of particles in teams is governed by local interactions of particles within a particlar neighborhood. The particle updates its velocity at each timestep based on what it obeserves in the world around it. As a whole, this leads to self-organizing, emergent behavior of the flock as a combined whole of its individuals. In particular, movement behaviors are updated with six velocity components: cohesion, alignment, separation, seeking, clearance, and avoidance. Together these components enable flocking behavior, minimize collisions, and strike a balance between the exploration of the world and the exploitation of discovered minerals.
 
-Cohesion: a vector pointing towards the average position of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the average neighbor is zero and increasing quadratically with distance until it is equal to Vmax when the distance to the average neighbor is r.
+%TODO: Discuss maximum velocity and other simulation parameters
+%TODO: Discuss how the velocity is computed given the velocity components
+%TODO: Dicsuss the finite state machine and how it is composed of behaviors
 
-Alignment: a vector pointing in the same direction as the average velocity of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the neighbors' average position is zero and increasing quadratically with distance until it is equal to Vmax when the distance to the average neighbor is r.
+It is important to discuss each individual velocity component in detail, as these components are part of the evolutionary mechanism that we have employed. Every component has several parameters: the radius - the site distance and alpha, the site angle which determine the neighborhood of the particular component. Additionally the weight and priority of the component are used to compute the final velocity of the particle.
 
-Separation: a vector pointing away from the average position of friendly agents in the neighborhood, with magnitude equal to Vmax when the distance between the agent and the average position is zero, and decreasing quadratically with distance until it is zero when the distance to the average neighbor is r.
+Cohesion: a vector pointing towards the average position of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the average neighbor is zero and increasing quadratically with distance until it is equal to the maximum velocity when the distance to the average neighbor is r. The neighborhood includes all team members who are not guarding or stunned.
 
-%Seeking, Homing, Mineral Cohesion: vectors pointing directly towards the targetted site with magnitude Vmax.
+\[ \vec { v_{ c } } =v_{ max }\frac { \Delta  \vec { p }  }{ \left\|   \Delta \vec { p }  \right\|  } \left( \frac { \left\|  \Delta \vec {  p }  \right\|  }{ r }  \right) ^{ 2 } \]
 
-Clearance: a vector pointing in a direction orthogonal to the difference between the average neighbor position and the agent's position with magnitude Vmax.
+Alignment: a vector pointing in the same direction as the average velocity of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the neighbors' average position is zero and increasing quadratically with distance until it is equal to the maximum velocity when the distance to the average neighbor is r. The neighborhood includes all team members if they are seeking or spreading.
+
+\[ \vec { v_{ al } } =v_{ max }{\left( \frac { \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2\frac {\Delta \vec{v}} { \left\| \Delta \vec{v} \right\| } \]
+
+Separation: a vector pointing away from the average position of friendly agents in the neighborhood, with magnitude equal to the maximum velocity when the distance between the agent and the average position is zero, and decreasing quadratically with distance until it is zero when the distance to the average neighbor is r. The nighborhood includes all team members no matter their state.
+
+\[ \vec { v_{ d } } =-v_{ max }\frac {\Delta \vec{p}} { \left\| \Delta \vec{p} \right\| }{\left( \frac { r - \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2 \]
+
+Seeking, Homing, and Mineral Cohesion: vectors pointing directly towards the target site with a magnitude proportional to the maximum velocity. These velocity components allow the particle to navigate ina  meaningful manner. The target is stored in memory and this velocity component isn't influenced by nearby neighbors.
+
+\[ \vec{v_h} = v_{max} \frac {\vec{p_t} - \vec p} { \left\| \vec{p_t} - \vec p \right\| } \]
+
+Clearance: a vector pointing in a direction orthogonal to the difference between the average neighbor position and the agent's position proportional the the maximum velocity. This component ensures that swarms have a wide field of view. The neighborhood of this component is team members in sight that are not guarding or stunned.
+
+\[ \vec{v_{cl}} = v_{max} \frac {\Delta \vec p_\perp } { \left\| \Delta \vec p_\perp  \right\| }  \]
 
 Avoidance: a vector pointing away from an enemy agent in the neighborhood, with magnitude Vmax when distance to the enemy is zero and decreasing linearly with distance until it is zero when the distance is r. Unlike all the other components, this can be applied multiple times each timestep--once for every enemy in the neighborhood.
+
+\[ \vec { v_{ av } } =\sum _{i=0}^{n} {v_{ max } \left( \frac{r - \left\| \Delta \vec{p_e} \right\|} {r} \right) \frac { \Delta \vec { p_e }  }{ \left\| \Delta \vec { p_e }  \right\|  }}  \]
 
 Also per Rodriguez, the FSM controlling each agent was always in one of four states: searching for new resources, moving to the last known resource deposit, carrying resources back to the home location, or guarding the home or a resource deposit. Each state was composed of some combination of the previously described velocity components, each characterized by a numerical weight and the radius and angle that defined the neighborhood.
 
