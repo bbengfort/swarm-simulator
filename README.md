@@ -4,16 +4,39 @@ Swarm Simulator
 
 [![Astroid Mining][astroid_mining.jpg]][astroid_mining.jpg]
 
-Ok, here is the initial package for our group project, Evolutionary Programming of Particle Swarm Movement. There are several things that need to be built:
+This project has two main components:
 
-1. A headless simulator that runs with speed for fitness evaluation
-2. An evolutionary programming/genetic programming construct to evolve the swarm
-3. A visual simulator so that we can see what the swarm is doing at any given timestep.
+1. a simulator that can run either headless or visual simulations of swarms
+2. an evolver that uses Evolutionary Programming to evolve the FSM of the swarm
 
-Note that I had started this project with just the visual component in mind, so if we have to reorganize or rename any of the code, that is perfectly fine with me.
+## Quick Start ##
+
+To get started quickly, I would recommend that you create a virtualenv for the code and install the requirements and libraries for the code into that environment. If you don't have virtualenv installed you can do so with the following command:
+
+    $ pip install virtualenv
+
+Then to install both the evolution packages and the swarm package:
+
+    $ mkvirtualenv venv
+    $ source venv/bin/activate
+    $ python setup.py install
+
+Running the code is now fairly straight forward; to run a visual simulation of the particle swarms use the `runsim.py` program in the bin folder:
+
+    $ python bin/runsim.py visual
+
+Note that you can get help and the various options using the `--help` flag. At this point you should see the visual simulation start running with the default configuration. If you would like to use a different configuration (say one that has been evolved) pass it in with the `-c /path/to/conf.yaml` option.
+
+Please let us know if you have any trouble!
 
 ## SAR Simulation ##
 This package is designed to implement an offline (non-visual) search and retrieval simulation based on the implementation in [1]. This offline simulation will then be used to evaluate the fitness of various parameters that are loaded via YAML configuration file.
+
+The package also has a viz library which implements a PyGame visual version of the simulator.
+
+## Evolver ##
+
+The evolver class makes use of Evolutionary Strategies and Evolutionary Programming to evolve the finite state machine that controls the behavior of each of the particles. This package uses Celery to do parallel, distributed processing of each simulation to compute fitness.
 
 ### References ###
 
