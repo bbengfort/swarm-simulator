@@ -37,4 +37,4 @@ clean:
 	-rm -rf .coverage
 	-rm -rf build
 	-rm -rf dist
-	-rm -rf lene/*.egg-info
+	-rm -rf *.egg-info

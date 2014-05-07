@@ -33,7 +33,7 @@ classifiers = (
 )
 
 config = {
-    "name": "Swarm-Simulator",
+    "name": "swarm-simulator",
     "version": "1.1",
     "description": "Implements a search and rescue simulation as well as an evolver.",
     "author": "Benjamin Bengfort",

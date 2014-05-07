@@ -18,7 +18,6 @@ To get started quickly, I would recommend that you create a virtualenv for the c
 Then to install both the evolution packages and the swarm package:
 
     $ mkvirtualenv venv
-    $ source venv/bin/activate
     $ python setup.py install
 
 Running the code is now fairly straight forward; to run a visual simulation of the particle swarms use the `runsim.py` program in the bin folder:
