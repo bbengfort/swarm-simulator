@@ -55,27 +55,45 @@ It is important to discuss each individual velocity component in detail, as thes
 
 Cohesion: a vector pointing towards the average position of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the average neighbor is zero and increasing quadratically with distance until it is equal to the maximum velocity when the distance to the average neighbor is r. The neighborhood includes all team members who are not guarding or stunned.
 
-\[ \vec { v_{ c } } =v_{ max }\frac { \Delta  \vec { p }  }{ \left\|   \Delta \vec { p }  \right\|  } \left( \frac { \left\|  \Delta \vec {  p }  \right\|  }{ r }  \right) ^{ 2 } \]
+\begin{equation}
+    \vec { v_{ c } } =v_{ max }\frac { \Delta  \vec { p }  }{ \left\|   \Delta \vec { p }  \right\|  } \left( \frac { \left\|  \Delta \vec {  p }  \right\|  }{ r }  \right) ^{ 2 }
+    \label{eqn:cohesion}
+\end{equation}
 
 Alignment: a vector pointing in the same direction as the average velocity of friendly agents in the neighborhood, with magnitude equal to zero when the agent's distance to the neighbors' average position is zero and increasing quadratically with distance until it is equal to the maximum velocity when the distance to the average neighbor is r. The neighborhood includes all team members if they are seeking or spreading.
 
-\[ \vec { v_{ al } } =v_{ max }{\left( \frac { \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2\frac {\Delta \vec{v}} { \left\| \Delta \vec{v} \right\| } \]
+\begin{equation}
+    \vec { v_{ al } } =v_{ max }{\left( \frac { \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2\frac {\Delta \vec{v}} { \left\| \Delta \vec{v} \right\| }
+    \label{eqn:alignment}
+\end{equation}
 
 Separation: a vector pointing away from the average position of friendly agents in the neighborhood, with magnitude equal to the maximum velocity when the distance between the agent and the average position is zero, and decreasing quadratically with distance until it is zero when the distance to the average neighbor is r. The nighborhood includes all team members no matter their state.
 
-\[ \vec { v_{ d } } =-v_{ max }\frac {\Delta \vec{p}} { \left\| \Delta \vec{p} \right\| }{\left( \frac { r - \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2 \]
+\begin{equation}
+    \vec { v_{ d } } =-v_{ max }\frac {\Delta \vec{p}} { \left\| \Delta \vec{p} \right\| }{\left( \frac { r - \left\| \Delta \vec { p } \right\|  }{ r }  \right)}^2
+    \label{eqn:separation}
+\end{equation}
 
 Seeking, Homing, and Mineral Cohesion: vectors pointing directly towards the target site with a magnitude proportional to the maximum velocity. These velocity components allow the particle to navigate ina  meaningful manner. The target is stored in memory and this velocity component isn't influenced by nearby neighbors.
 
-\[ \vec{v_h} = v_{max} \frac {\vec{p_t} - \vec p} { \left\| \vec{p_t} - \vec p \right\| } \]
+\begin{equation}
+    \vec{v_h} = v_{max} \frac {\vec{p_t} - \vec p} { \left\| \vec{p_t} - \vec p \right\| }
+    \label{eqn:seeking}
+\end{equation}
 
 Clearance: a vector pointing in a direction orthogonal to the difference between the average neighbor position and the agent's position proportional the the maximum velocity. This component ensures that swarms have a wide field of view. The neighborhood of this component is team members in sight that are not guarding or stunned.
 
-\[ \vec{v_{cl}} = v_{max} \frac {\Delta \vec p_\perp } { \left\| \Delta \vec p_\perp  \right\| }  \]
+\begin{equation}
+    \vec{v_{cl}} = v_{max} \frac {\Delta \vec p_\perp } { \left\| \Delta \vec p_\perp  \right\| }
+    \label{eqn:clearance}
+\end{equation}
 
 Avoidance: a vector pointing away from an enemy agent in the neighborhood, with magnitude $v_{max}$ when distance to the enemy is zero and decreasing linearly with distance until it is zero when the distance is r. Unlike all the other components, this can be applied multiple times each timestep--once for every enemy in the neighborhood.
 
-\[ \vec { v_{ av } } =\sum _{i=0}^{n} {v_{ max } \left( \frac{r - \left\| \Delta \vec{p_e} \right\|} {r} \right) \frac { \Delta \vec { p_e }  }{ \left\| \Delta \vec { p_e }  \right\|  }}  \]
+\begin{equation}
+    \vec { v_{ av } } =\sum _{i=0}^{n} {v_{ max } \left( \frac{r - \left\| \Delta \vec{p_e} \right\|} {r} \right) \frac { \Delta \vec { p_e }  }{ \left\| \Delta \vec { p_e }  \right\|  }}
+    \label{eqn:avoidance}
+\end{equation}
 
 Also per Rodriguez, the FSM controlling each agent was always in one of four states: searching for new resources, moving to the last known resource deposit, carrying resources back to the home location, or guarding the home or a resource deposit. Each state was composed of some combination of the previously described velocity components, each characterized by a numerical weight and the radius and angle that defined the neighborhood.
 
@@ -99,7 +117,7 @@ The set of states in each controller was fixed to be the same set of compound be
 
 The mutation operator first selected which parameters to modify independently. We used a 20\% chance for mutating each weight, radius, alpha, and threshold. Each selected threshold had an equal chance of increasing by 1 and decreasing by 1. Each selected real-valued parameter was modified through the addition of a uniformly distributed random number with mean 0. We chose to mutate each weight by -0.2 to 0.2 and each alpha and radius by -20 to 20.
 
-The recombination operator ... %TODO talk about recombination
+The recombination operator also ignored the elite individuals carried over from the last population. Parents were selected with a likelihood of 0.2 to be recombined with another individual. Our recombination operator replaced the first parent with intermediary recombination, that is the mean value of the parents velocity parameters. The second chosen parent remained in the population. Although elite individuals were exempt from recombination, they were able to be selected as the secondary parent, contributing their genetic material to the recombined offspring.
 
 A round of evolution combined the mutation and recombination operators to produce the next generation. After evaluating every individual in the current generation, we applied elitism, tournament selection, mutation, and recombination to complete a round of evolution. For elitism, the single best individual of the previous generation was always carried into the next generation without modification. The other 49 individuals were selected via tournaments of size 3. Each of the 49 was then subjected to the mutation operator, with its parameters being mutated independently.
 
@@ -145,7 +163,7 @@ Table \ref{table:meanfitness} shows the mean, standard deviation, maximum, and m
 
 The average fitness over time of the black and red teams is displayed in \ref{fig:head2head} which graphs the mean fitness of ten individual runs of the best human designed team (the red team) vs the best evolved team, the black team. Within 6000 timesteps the red team begins to lose resources as the black team exploits the red base in addition to more resource locations than the red team, which favors a strategy of exploiting one resource deposit at a time.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \centering
         \includegraphics[width=0.5\textwidth]{figures/head2head}
     \caption{Performance of evolved particles vs human designed particles in head to head simulation of 10,000 timesteps}
@@ -154,16 +172,16 @@ The average fitness over time of the black and red teams is displayed in \ref{fi
 
 The performance of our two evolutionary computations is expressed in \ref{fig:meanfit1} and \ref{fig:meanfit2} which plots the mean fitness of the entire population per each generation. In experiment one, only the mutation operator was used to generate the next population. In experiment two, both recombination and mutation were used to produce the next generation.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \centering
         \includegraphics[width=0.5\textwidth]{figures/meanfit_experiment1}
     \caption{Mean fitness per generation with mutation}
     \label{fig:meanfit1}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
     \centering
-        \includegraphics[width=0.5\textwidth]{figures/fitness21}
+        \includegraphics[width=0.5\textwidth]{figures/fitness46}
     \caption{Mean fitness per generation with mutation and recombination}
     \label{fig:meanfit2}
 \end{figure}
