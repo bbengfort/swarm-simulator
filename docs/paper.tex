@@ -21,7 +21,7 @@ Self-organizing "flocks" of agents that display emergent coordinated behavior ca
 
 \section{Introduction}
 
-Ever since Reynolds demonstrated that flocks of birds could be simulated as multi-agent systems \cite{reynolds1987flocks}, wherein each agent's motion is determined solely by local interactions with other agents, there has been interest in extending such systems to solve more general problems. The self-organizing characteristic of these systems, whereby coordinated behavior emerges without a central control mechanism, suggests that even relatively simple decentralized systems might yield novel approaches to problems in both the computational and physical domains. 
+Ever since Reynolds demonstrated that flocks of birds could be simulated as multi-agent systems \cite{reynolds1987flocks}, wherein each agent's motion is determined solely by local interactions with other agents, there has been interest in extending such systems to solve more general problems. The self-organizing characteristic of these systems, whereby coordinated behavior emerges without a central control mechanism, suggests that even relatively simple decentralized systems might yield novel approaches to problems in both the computational and physical domains.
 
 By abstracting the idea of "flocks" to $n$-dimensional spaces, for example, "particle swarms" \cite{kennedy1995particle,clerc2002particle} or "cultural algorithms" \cite{chung1996testbed} have been used for numerical optimization. In the physical domain, swarm behavior have been used multirobot team movement control \cite{balch1998behavior,ccelikkanat2010steering,hodgins1994robot}, or during deployment of mobile robots or sensors. In \cite{cheng2009distributed}, flocking behavior was used to maximize coverage during such deployments while still maintaining collective behavior. Other tasks being explored include urban pursuit \cite{winder2004using} and robot herding of animals \cite{vaughan1998robot}.
 
@@ -112,7 +112,12 @@ Each simulation was run in parallel as subprocess of a master evolutionary compu
 In our first experiment we only used mutation to change the states in the finite state machine of the particles. In the second experiment we used recombination in addition to mutation operations. In either case, elite individuals were exempt from genetic operations, however elite individuals could be recombined to replace other individuals in the population. Both the mutation and recombination (when used) had a likelihood of 0.2. Maximum and minimum parameters were also placed on the values of the weight, the radii, and the alpha values to ensure an economic and reasonable result.
 
 \section{Results}
-results
+
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.5\textwidth]{figures/meanfit_experiment1}
+    \caption{Mean fitness per generation with mutation}
+\end{figure}
 
 \section{Discussion}
 This work described herein represents only the first steps in the application of evolutionary techniques to this problem domain. By mutating and applying selective pressure to the movement component parameters, we were able to show that a machine could optimize the parameters better than a person. This was a form of optimization, but it did not result in novel behaviors. Indeed, since we hard-wired the transitions between the states (allowing for the guarding threshold to evolve) and allowed the evolver to mutate existing movement components in a given state but not to add them (i.e., we pre-defined which components could have non-zero weight for each state), we held constant the "meaning" of each state.
