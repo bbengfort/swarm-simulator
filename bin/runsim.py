@@ -21,6 +21,7 @@ Run the swarm simulation.
 
 import os
 import sys
+import csv
 import time
 import argparse
 import cProfile
@@ -100,6 +101,35 @@ def profile(args):
     cProfile.runctx('run()', globals(), locals(), args.filename, args.sort)
     return ''
 
+def head2head(args):
+    """
+    Run a head to head simulation, outputing the magnitude of the stash of
+    each team in the simulation at every time step.
+    """
+    start = time.time()
+    world = World(ally_conf_path=args.conf_path, maximum_time=args.iterations)
+
+    print "Starting headless simulation, use CTRL+C to quit."
+    writer = csv.writer(args.stream, delimiter='\t')
+    writer.writerow(('black', 'red'))
+    while world.time < world.iterations:
+        try:
+            world.update()
+            writer.writerow((str(world.ally_home.stash), str(world.enemy_home.stash)))
+            if world.time % 1000 == 0:
+                print "%ik iterations completed" % (world.time / 1000)
+        except KeyboardInterrupt:
+            print "Quitting Early!"
+            break
+
+    finit = time.time()
+    delta = finit - start
+
+    output = []
+    output.append("Ran %i time steps in %0.3f seconds" % (world.time, delta))
+    output.append("Agents successfully collected %i resources" % world.ally_home.stash)
+    return "\n".join(output)
+
 ##########################################################################
 ## Main method
 ##########################################################################
@@ -133,6 +163,14 @@ def main(*argv):
                                 help='Number of iterations to profile')
     profile_parser.add_argument('-c', '--conf-path', type=str, dest='conf_path', default='./conf/params.yaml', help='path to ally configuration file.')
     profile_parser.set_defaults(func=profile)
+
+    # head2head headless simulation
+    head2head_parser = subparsers.add_parser('head2head', help='Run a headless simulation with the configuration file')
+    head2head_parser.add_argument('-c', '--conf-path', type=str, dest='conf_path', default='./conf/params.yaml', help='path to ally configuration file.')
+    head2head_parser.add_argument('-o', '--outpath', dest='stream', type=argparse.FileType('w'), default=sys.stdout, help='Write head to head results out.')
+    head2head_parser.add_argument('-i', '--iterations', metavar='STEPS', type=int, default=10000,
+                                    help='Number of iterations to profile')
+    head2head_parser.set_defaults(func=head2head)
 
     # Handle input from the command line
     args = parser.parse_args()            # Parse the arguments
