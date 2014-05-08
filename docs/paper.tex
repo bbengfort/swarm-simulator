@@ -94,6 +94,12 @@ At the beginning of each timestep, therefore, each agent is in a particular stat
 
 \subsection{Evolution}
 
+The evolution of a finite state machine for movement control was achieved through the application of a simple set of genetic operators to the weights and parameters of the machine. The genotype of a movement controller was represented as two integers, one for each guarding threshold, and a vector of real-valued numbers consisting of the alpha parameter, radius, and weight given to each component of each compound movement behavior.
+
+The set of states in each controller was fixed to be the same set of compound behaviors as those found in \cite{rodriguez2004extending}, but with parameters derived through evolutionary programming. This allowed for easy comparison with the authoritative, human-derived solution. In addition, the transitions between states were kept the same except for the guarding thresholds, which were evolved.
+
+New individuals were introduced through the application of mutation and recombination operators. The mutation operator adds or removes an integer value from each selected threshold and adds a uniformly distributed random value with mean 0 to each selected real-valued parameter. Each mutation operation selects which parameters to modify independently, so the mutation of one parameter is independent of the mutation of another parameter.
+
 \section{Experimental Procedure}
 
 The computational experiment we ran consisted of pitting two simulated teams in competition with each other in a 3000 x 3000 world for a limited time. We restricted each team to 10 agents, vice 50 in the Rodriguez paper, and used 5 resource deposits instead of 8; both changes were to make the simulation more computationally tractable. The "red" team's behavior was fixed to parameters similar to those found empirically by Rodriguez to yield the best results. At the start of evolution we randomly generated 50 configurations to control the "black" team. Fitness was defined as the number of resources gathered by the black team after 10,000 timesteps.
