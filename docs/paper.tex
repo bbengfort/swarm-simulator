@@ -1,7 +1,10 @@
 \documentclass[12pt,journal,compsoc]{IEEEtran}
 \providecommand{\PSforPDF}[1]{#1}
 \hyphenation{op-tical net-works semi-conduc-tor}
-
+\usepackage{graphicx}
+\usepackage{float}
+\floatstyle{boxed}
+\restylefloat{figure}
 
 \begin{document}
 \title{Evolutionary Design of Particles for Collectively Intelligent Problem Solving}
@@ -94,11 +97,25 @@ At the beginning of each timestep, therefore, each agent is in a particular stat
 
 \subsection{Evolution}
 
+After running each of the 50 configurations, we subjected the population to a round of evolution. The most fit individual from the current generation was always carried into the next generation, with the other 49 selected via tournaments of size 3. Each of the 49 was then subjected to mutation, with an independent 20\% chance of mutating each weight, each radius, and each alpha of every component. If selected for mutation, the trait was changed by a random value uniformly-distributed between -0.2 and 0.2 for weights, -20 and 20 for radii, and -20 and 20 for alphas. Additionally, the home guarding and deposit guarding threshold each had a 20\% of changing by plus or minus 1.
+
 \section{Experimental Procedure}
 
-The computational experiment we ran consisted of pitting two simulated teams in competition with each other in a 3000 x 3000 world for a limited time. We restricted each team to 10 agents, vice 50 in the Rodriguez paper, and used 5 resource deposits instead of 8; both changes were to make the simulation more computationally tractable. The "red" team's behavior was fixed to parameters similar to those found empirically by Rodriguez to yield the best results. At the start of evolution we randomly generated 50 configurations to control the "black" team. Fitness was defined as the number of resources gathered by the black team after 10,000 timesteps.
+Our computational experiment required two main components; a system to carry out the evolutionary computation, which constructed genotype populations via genetic operators, and a simulation system to instantiate phenotypes- particle swarms whose individuals are constructed from the genotypes. The simulation system computed the fitness of a particular swarm, which allowed the evolutionary computation to build the next generation.
 
-After running each of the 50 configurations, we subjected the population to a round of evolution. The most fit individual from the current generation was always carried into the next generation, with the other 49 selected via tournaments of size 3. Each of the 49 was then subjected to mutation, with an independent 20\% chance of mutating each weight, each radius, and each alpha of every component. If selected for mutation, the trait was changed by a random value uniformly-distributed between -0.2 and 0.2 for weights, -20 and 20 for radii, and -20 and 20 for alphas. Additionally, the home guarding and deposit guarding threshold each had a 20\% of changing by plus or minus 1.
+The simulation environment consisted of two simulated teams in competition with each other; a red team and a black team. The simulated world was a 3000 x 3000 world with periodic boundary conditions and the number of timesteps was limited to 10,000 per simulation due to computational constraints. We restricted each team to 10 agents each,and evenly distributed 5 resource deposits betwen the red and black bases with 80 resources per deposit. Both the team size and the time limit were implemented to make the evolutionary computation tractable; our implementation required on average 273 seconds to complete; and each generation took approximately 52 minutes to compute all fitness values.
+
+The red team's behavior was implemented using a finite state machine, memory, and movement parameters exactly as the best empirical result designed by humans in \cite{rodriguez2004extending}, called \textit{full guarding flock} meaning that the swarm guarded both its home base as well as discovered mineral deposits. The black team utilized the configuration derived from a genotype individual produced by the evolutionary computation. We attempted to hold as many variables constant as possible, including the locations of bases and resources, starting positions and velocities of agents, and update order. After 10,000 timesteps, the fitness of the black team was returned as the number of resources in the black base.
+
+\begin{figure}[h!]
+    \centering
+        \includegraphics[width=0.5\textwidth]{figures/simulation}
+    \caption{Simulation of agents spreading in flocks.}
+\end{figure}
+
+Each simulation was run in parallel as subprocess of a master evolutionary computation process. The master process randomly initialized a population of 50 black team configurations, then ran a simulation for each individual in the population. After all 50 simulations were completed, tournament based selection with tournaments of size three were carried over to the next generation along with the 5 most elite individuals. After selection, genetic operators were applied.
+
+In our first experiment we only used mutation to change the states in the finite state machine of the particles. In the second experiment we used recombination in addition to mutation operations. In either case, elite individuals were exempt from genetic operations, however elite individuals could be recombined to replace other individuals in the population. Both the mutation and recombination (when used) had a likelihood of 0.2. Maximum and minimum parameters were also placed on the values of the weight, the radii, and the alpha values to ensure an economic and reasonable result.
 
 \section{Results}
 results
