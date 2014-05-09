@@ -57,7 +57,7 @@ def queue_evaluation(args):
         outpath = os.path.join(outdir, '%s_%02i.csv' % (args.prefix, idx))
         head2head.delay(config, outpath, args.iterations)
 
-    return '%i tasks queued. Evaluating on %i iterations.\nResults written to: %s' % (args.trials, args.iterations, outpath)
+    return '%i tasks queued. Evaluating on %i iterations.\nResults written to: %s' % (args.trials, args.iterations, outdir)
 
 ##########################################################################
 ## Main Method
