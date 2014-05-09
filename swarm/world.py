@@ -126,6 +126,7 @@ class World(object):
 
         # Initialize resources
         self.add_agents(initialize_resources())
+        self.resources = [agent for agent in self.agents if agent.idx.startswith('mineral')]
 
     def add_agent(self, agent):
         agent.world = self
@@ -141,3 +142,12 @@ class World(object):
         for agent in self.agents:
             agent.blit()
         self.time += 1
+
+    def status(self):
+        """
+        Reports the number of resources in the bases and resource depots
+        at the given timestamp. (Ordered tuple).
+        """
+        bases = (self.ally_home.stash, self.enemy_home.stash)
+        depot = tuple(depot.stash for depot in self.resources)
+        return bases + depot
